@@ -54,15 +54,19 @@ Example upstream target inside Docker network:
 
 Set command Request URLs to:
 
-- `https://<your-domain>/webhook/slack-lms-supervisor`
+- `https://<your-domain>/webhook/supervisor`
 
 Commands:
-- `/submit`
-- `/complete`
-- `/feedback`
-- `/enroll`
+- `/learn`
 - `/quiz`
-- `/tutor`
+- `/progress`
+- `/enroll`
+- `/cert`
+- `/report`
+- `/gaps`
+- `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+
+Legacy commands (optional): `/submit`, `/complete`, `/feedback`, `/tutor`.
 
 Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)

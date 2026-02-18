@@ -16,6 +16,8 @@ It orchestrates a supervisor workflow that routes Slack commands/events to speci
 - `docs/DEPLOYMENT.md` → Full production deployment details
 - `docs/SECURITY_REVIEW.md` → Security vulnerabilities identified and remediation status
 - `docs/SCHEMA.md` → Notion curriculum schema + Universal Lesson Canvas constraints
+- `docs/SLACK_MANIFEST_INTEGRATION.md` → command/event URL mapping for the provided Slack manifest
+- `docs/slack_app_manifest.json` → Slack app manifest currently used for command/event wiring
 - `docker-compose.yml` → Self-hosted baseline stack (n8n + postgres + redis)
 
 ## Agent Map (n8n Routing)
@@ -43,17 +45,24 @@ It orchestrates a supervisor workflow that routes Slack commands/events to speci
 2. Import workflow JSONs into n8n.
 3. Duplicate template into all 14 agent workflows.
 4. Wire Execute Workflow references in supervisor.
-5. Configure Slack command URLs to `/webhook/slack-lms-supervisor`.
+5. Configure Slack command URLs to `/webhook/supervisor` (and `/webhook/onboard` for onboarding).
 6. Activate workflows and run payload smoke tests.
 
 ## Slack Command Contract
 
-- `/submit <lesson_code>`
-- `/complete`
-- `/feedback <text>`
-- `/enroll @user <course>`
+Supervisor webhook (`/webhook/supervisor`) commands from your manifest:
+- `/learn`
 - `/quiz`
-- `/tutor <topic>`
+- `/progress`
+- `/enroll`
+- `/cert`
+- `/report`
+- `/gaps`
+
+Dedicated onboarding webhook:
+- `/onboard` -> `/webhook/onboard`
+
+Legacy commands remain supported for backward compatibility: `/submit`, `/complete`, `/feedback`, `/tutor`.
 
 ## Weekly Cadence
 

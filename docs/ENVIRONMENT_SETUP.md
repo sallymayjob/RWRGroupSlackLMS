@@ -48,16 +48,20 @@ Critical required values:
 
 ## 5) Slack Command Configuration
 
-Register these commands in your Slack app:
-- `/submit`
-- `/complete`
-- `/feedback`
-- `/enroll`
+Register manifest commands in your Slack app:
+- `/learn`
 - `/quiz`
-- `/tutor`
+- `/progress`
+- `/enroll`
+- `/cert`
+- `/report`
+- `/gaps`
+- `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+
+Legacy commands are still accepted for compatibility: `/submit`, `/complete`, `/feedback`, `/tutor`.
 
 Set command Request URL:
-- `https://<your-domain>/webhook/slack-lms-supervisor`
+- `https://<your-domain>/webhook/supervisor`
 
 
 ## 5A) Notion Workspace Binding (Your Database)

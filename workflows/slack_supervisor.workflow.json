@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "path": "slack-lms-supervisor",
+        "path": "supervisor",
         "httpMethod": "POST",
         "responseMode": "responseNode"
       },
@@ -18,7 +18,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst text = (body.text || '').trim();\n\nlet intent = 'support';\nlet agentId = 6;\n\nif (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack'\n    }\n  }\n}];"
+        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst text = (body.text || '').trim();\n\nlet intent = 'support';\nlet agentId = 6;\n\nif (cmd === '/learn') { intent = 'continue_learning'; agentId = 3; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/progress') { intent = 'view_progress'; agentId = 12; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/cert') { intent = 'issue_certificate'; agentId = 7; }\nelse if (cmd === '/report') { intent = 'view_dashboard'; agentId = 12; }\nelse if (cmd === '/gaps') { intent = 'view_learning_gaps'; agentId = 9; }\nelse if (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack'\n    }\n  }\n}];"
       },
       "id": "parsePayload",
       "name": "Parse Slack Payload",
@@ -56,7 +56,22 @@
             {
               "value1": "={{$json.agentId}}",
               "operation": "equal",
+              "value2": 7
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
               "value2": 8
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 9
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 12
             }
           ]
         }
@@ -191,6 +206,51 @@
         620,
         240
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_07_certification",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent7",
+      "name": "Call Agent 7 Certification",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_09_gap_analyst",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent9",
+      "name": "Call Agent 9 Gap Analyst",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_12_reporting",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent12",
+      "name": "Call Agent 12 Reporting",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        820
+      ]
     }
   ],
   "connections": {
@@ -248,7 +308,28 @@
         ],
         [
           {
+            "node": "Call Agent 7 Certification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Call Agent 8 Enrollment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 9 Gap Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 12 Reporting",
             "type": "main",
             "index": 0
           }
@@ -337,6 +418,39 @@
             "index": 0
           }
         ],
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 7 Certification": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 9 Gap Analyst": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 12 Reporting": {
+      "main": [
         [
           {
             "node": "Respond to Slack",
