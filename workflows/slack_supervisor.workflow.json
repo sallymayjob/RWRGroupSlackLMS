@@ -1,0 +1,162 @@
+{
+  "name": "slack_supervisor_router",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "slack-lms-supervisor",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "id": "webhookIn",
+      "name": "Slack Supervisor Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst text = (body.text || '').trim();\n\nlet intent = 'support';\nlet agentId = 6;\n\nif (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack'\n    }\n  }\n}];"
+      },
+      "id": "parsePayload",
+      "name": "Parse Slack Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 320]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "number": [
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 2
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 3
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 4
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 5
+            },
+            {
+              "value1": "={{$json.agentId}}",
+              "operation": "equal",
+              "value2": 8
+            }
+          ]
+        }
+      },
+      "id": "switchByAgent",
+      "name": "Switch by Agent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [700, 320]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_02_quiz_master",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent2",
+      "name": "Call Agent 2 Quiz",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [980, 120]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_03_tutor",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent3",
+      "name": "Call Agent 3 Tutor",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [980, 220]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_04_progress_tracker",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent4",
+      "name": "Call Agent 4 Progress",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [980, 320]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_05_feedback_analyst",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent5",
+      "name": "Call Agent 5 Feedback",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [980, 420]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_08_enrollment_manager",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "id": "callAgent8",
+      "name": "Call Agent 8 Enrollment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [980, 520]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, intent: $json.intent, agentId: $json.agentId } }}"
+      },
+      "id": "respond",
+      "name": "Respond to Slack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1260, 320]
+    }
+  ],
+  "connections": {
+    "Slack Supervisor Webhook": {
+      "main": [[{ "node": "Parse Slack Payload", "type": "main", "index": 0 }]]
+    },
+    "Parse Slack Payload": {
+      "main": [[{ "node": "Switch by Agent", "type": "main", "index": 0 }]]
+    },
+    "Switch by Agent": {
+      "main": [
+        [{ "node": "Call Agent 2 Quiz", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 3 Tutor", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 4 Progress", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 5 Feedback", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 8 Enrollment", "type": "main", "index": 0 }],
+        [{ "node": "Respond to Slack", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Agent 2 Quiz": { "main": [[{ "node": "Respond to Slack", "type": "main", "index": 0 }]] },
+    "Call Agent 3 Tutor": { "main": [[{ "node": "Respond to Slack", "type": "main", "index": 0 }]] },
+    "Call Agent 4 Progress": { "main": [[{ "node": "Respond to Slack", "type": "main", "index": 0 }]] },
+    "Call Agent 5 Feedback": { "main": [[{ "node": "Respond to Slack", "type": "main", "index": 0 }]] },
+    "Call Agent 8 Enrollment": { "main": [[{ "node": "Respond to Slack", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "replace-with-generated-version-id"
+}

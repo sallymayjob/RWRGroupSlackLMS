@@ -1,0 +1,71 @@
+{
+  "config": {
+    "seed": 99,
+    "max_workers": 20,
+    "personas": [
+      "Fast Finisher",
+      "Steady Learner",
+      "Needs Support",
+      "Feedback Heavy",
+      "At-Risk Catchup"
+    ],
+    "days": 5
+  },
+  "totals": {
+    "requests": 192,
+    "successes": 180,
+    "failures": 12,
+    "success_rate": 0.9375,
+    "validation_failures": 4
+  },
+  "latency": {
+    "avg_ms": 309.42,
+    "p50_ms": 307.5,
+    "p95_ms": 398.81,
+    "p99_ms": 431.06,
+    "max_ms": 441.82
+  },
+  "integration_failures": {
+    "notion_write": 1,
+    "lm_table_write": 4,
+    "sheets_write": 3
+  },
+  "by_persona": {
+    "Fast Finisher": {
+      "requests": 48,
+      "success_rate": 0.9375,
+      "avg_latency_ms": 295.69,
+      "p95_latency_ms": 379.81,
+      "validation_failures": 1
+    },
+    "Steady Learner": {
+      "requests": 36,
+      "success_rate": 0.9444,
+      "avg_latency_ms": 318.96,
+      "p95_latency_ms": 400.04,
+      "validation_failures": 0
+    },
+    "Needs Support": {
+      "requests": 42,
+      "success_rate": 0.9048,
+      "avg_latency_ms": 302.14,
+      "p95_latency_ms": 371.75,
+      "validation_failures": 1
+    },
+    "Feedback Heavy": {
+      "requests": 36,
+      "success_rate": 0.9722,
+      "avg_latency_ms": 309.91,
+      "p95_latency_ms": 390.7,
+      "validation_failures": 0
+    },
+    "At-Risk Catchup": {
+      "requests": 30,
+      "success_rate": 0.9333,
+      "avg_latency_ms": 329.53,
+      "p95_latency_ms": 432.29,
+      "validation_failures": 2
+    }
+  },
+  "generated_at_epoch": 1771372888.1959329
+}

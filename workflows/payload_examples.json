@@ -1,0 +1,40 @@
+{
+  "incomingSlackEvent": {
+    "token": "xxx",
+    "team_id": "T123",
+    "team_domain": "rwr-team",
+    "channel_id": "C123",
+    "channel_name": "lms",
+    "user_id": "U123",
+    "user_name": "learner_1",
+    "command": "/submit",
+    "text": "L001",
+    "response_url": "https://hooks.slack.com/commands/..."
+  },
+  "normalizedCommand": {
+    "intent": "submit_lesson_code",
+    "agentId": 4,
+    "learner": {
+      "slackUserId": "U123"
+    },
+    "payload": {
+      "lessonCode": "L001"
+    },
+    "meta": {
+      "receivedAt": "2026-01-01T00:00:00Z",
+      "source": "slack"
+    }
+  },
+  "enrollExample": {
+    "command": "/enroll",
+    "text": "@jane.doe DATA-ANALYTICS-101",
+    "normalized": {
+      "intent": "enroll_user",
+      "agentId": 8,
+      "payload": {
+        "user": "@jane.doe",
+        "course": "DATA-ANALYTICS-101"
+      }
+    }
+  }
+}
