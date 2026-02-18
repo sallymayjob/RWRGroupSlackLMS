@@ -1,5 +1,4 @@
 {
-  "name": "slack_supervisor_router",
   "nodes": [
     {
       "parameters": {
@@ -7,7 +6,6 @@
         "httpMethod": "POST",
         "responseMode": "responseNode"
       },
-      "id": "webhookIn",
       "name": "Slack Supervisor Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -20,7 +18,6 @@
       "parameters": {
         "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst rawText = String(body.text || '').trim();\nconst text = rawText.slice(0, 1000);\n\nlet intent = 'support';\nlet agentId = 6;\nlet isSupported = true;\n\nif (cmd === '/learn') { intent = 'continue_learning'; agentId = 3; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/progress') { intent = 'view_progress'; agentId = 12; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/cert') { intent = 'issue_certificate'; agentId = 7; }\nelse if (cmd === '/report') { intent = 'view_dashboard'; agentId = 12; }\nelse if (cmd === '/gaps') { intent = 'view_learning_gaps'; agentId = 9; }\nelse if (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\nelse { isSupported = false; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    isSupported,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null,\n      userName: body.user_name || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack',\n      requestId: body.trigger_id || body.api_app_id || null,\n      textTruncated: rawText.length > 1000\n    }\n  }\n}];"
       },
-      "id": "parsePayload",
       "name": "Parse Slack Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -76,7 +73,6 @@
           ]
         }
       },
-      "id": "switchByAgent",
       "name": "Switch by Agent",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
@@ -91,7 +87,6 @@
         "mode": "each",
         "waitForSubWorkflow": true
       },
-      "id": "callAgent2",
       "name": "Call Agent 2 Quiz",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
@@ -106,7 +101,6 @@
         "mode": "each",
         "waitForSubWorkflow": true
       },
-      "id": "callAgent3",
       "name": "Call Agent 3 Tutor",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
@@ -121,7 +115,6 @@
         "mode": "each",
         "waitForSubWorkflow": true
       },
-      "id": "callAgent4",
       "name": "Call Agent 4 Progress",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
@@ -136,7 +129,6 @@
         "mode": "each",
         "waitForSubWorkflow": true
       },
-      "id": "callAgent5",
       "name": "Call Agent 5 Feedback",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
@@ -151,7 +143,6 @@
         "mode": "each",
         "waitForSubWorkflow": true
       },
-      "id": "callAgent8",
       "name": "Call Agent 8 Enrollment",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
@@ -165,7 +156,6 @@
         "respondWith": "json",
         "responseBody": "={{ $json.isValid === false ? { ok: false, error: 'unauthorized', reason: $json.reason } : ($json.isSupported === false ? { ok: false, error: 'unsupported_command', command: $json.command } : { ok: true, intent: $json.intent, agentId: $json.agentId }) }}"
       },
-      "id": "respond",
       "name": "Respond to Slack",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
@@ -176,4 +166,284 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst headers = $json.headers || {};\nconst body = $json.body || $json;\nconst ts = headers['x-slack-request-timestamp'] || headers['X-Slack-Request-Timestamp'];\nconst sig = headers['x-slack-signature'] || headers['X-Slack-Signature'];\nconst secret = $env.SLACK_SIGNING_SECRET;\n\nif (!secret) {\n  throw new Error('SLACK_SIGNING_SECRET is not set');\n}\n\nif (!ts || !sig) {\n  return [{ json: { isValid: false, reason: 'missing_signature_headers', body } }];\n}\n\nconst age = Math.abs(Math.floor(Date.now() / 1000) - Number(ts));\nif (!Number.isFinite(age) || age > 300) {\n  return [{ json: { isValid: false, reason: 'stale_timestamp', body } }];\n}\n\nconst rawBody = typeof body === 'string' ? body : new URLSearchParams(body).toString();\nconst baseString = `v0:${ts}:${rawBody}`;\nconst expected = `v0=${crypto.createHmac('sha256', secret).update(baseString).digest('hex')}`;\nconst provided = String(sig).trim();\nconst ok = (provided.length === expected.length) && crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));\n\nreturn [{ json: { isValid: ok, reason
+        "jsCode": "const crypto = require('crypto');\nconst headers = $json.headers || {};\nconst body = $json.body || $json;\nconst ts = headers['x-slack-request-timestamp'] || headers['X-Slack-Request-Timestamp'];\nconst sig = headers['x-slack-signature'] || headers['X-Slack-Signature'];\nconst secret = $env.SLACK_SIGNING_SECRET;\n\nif (!secret) {\n  throw new Error('SLACK_SIGNING_SECRET is not set');\n}\n\nif (!ts || !sig) {\n  return [{ json: { isValid: false, reason: 'missing_signature_headers', body } }];\n}\n\nconst age = Math.abs(Math.floor(Date.now() / 1000) - Number(ts));\nif (!Number.isFinite(age) || age > 300) {\n  return [{ json: { isValid: false, reason: 'stale_timestamp', body } }];\n}\n\nconst rawBody = typeof body === 'string' ? body : new URLSearchParams(body).toString();\nconst baseString = `v0:${ts}:${rawBody}`;\nconst expected = `v0=${crypto.createHmac('sha256', secret).update(baseString).digest('hex')}`;\nconst provided = String(sig).trim();\nconst ok = (provided.length === expected.length) && crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));\n\nreturn [{ json: { isValid: ok, reason: ok ? 'ok' : 'invalid_signature', body } }];"
+      },
+      "name": "Validate Slack Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.isValid}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_07_certification",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "name": "Call Agent 7 Certification",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_09_gap_analyst",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "name": "Call Agent 9 Gap Analyst",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "agent_12_reporting",
+        "mode": "each",
+        "waitForSubWorkflow": true
+      },
+      "name": "Call Agent 12 Reporting",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        820
+      ]
+    }
+  ],
+  "connections": {
+    "Slack Supervisor Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Slack Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Slack Payload": {
+      "main": [
+        [
+          {
+            "node": "Switch by Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Agent": {
+      "main": [
+        [
+          {
+            "node": "Call Agent 2 Quiz",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 3 Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 4 Progress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 5 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 7 Certification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 8 Enrollment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 9 Gap Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agent 12 Reporting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 2 Quiz": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 3 Tutor": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 4 Progress": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 5 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 8 Enrollment": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Slack Signature": {
+      "main": [
+        [
+          {
+            "node": "Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature Valid?": {
+      "main": [
+        [
+          {
+            "node": "Parse Slack Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 7 Certification": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 9 Gap Analyst": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Agent 12 Reporting": {
+      "main": [
+        [
+          {
+            "node": "Respond to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
