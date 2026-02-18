@@ -112,3 +112,16 @@ For full stack deployment (Docker Compose, reverse proxy, queue workers, hardeni
 ## Database Schema Reference
 
 Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+
+
+## Content Architect Prompt Setup
+
+For `agent_01_content_architect`, set your Claude Project Custom Instructions from:
+- `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md`
+
+Upload these files to the Claude project knowledge base as required by the prompt:
+- Brand Guidelines
+- ULC Template
+- Course Map
+- SOP-05
+- Prompt Library

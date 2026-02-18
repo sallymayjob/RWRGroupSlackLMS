@@ -16,6 +16,7 @@ It orchestrates a supervisor workflow that routes Slack commands/events to speci
 - `docs/DEPLOYMENT.md` → Full production deployment details
 - `docs/SECURITY_REVIEW.md` → Security vulnerabilities identified and remediation status
 - `docs/SCHEMA.md` → Notion curriculum schema + Universal Lesson Canvas constraints
+- `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md` → master system prompt for Agent 1 (Content Architect)
 - `docs/DATABASE_SCHEMA.md` → operational SQL schema overview
 - `docs/CODE_REVIEW.md` → code review findings and remediations
 - `docs/SLACK_MANIFEST_INTEGRATION.md` → command/event URL mapping for the provided Slack manifest
@@ -134,3 +135,8 @@ python tests/qa_performance_regression_pentest.py
 Outputs:
 - `reports/qa_validation_summary.json`
 - `reports/QA_VALIDATION_REPORT.md`
+
+
+## Content Architect Master Prompt
+
+Use `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md` as the authoritative Claude Project Custom Instructions for **agent_01_content_architect**.

@@ -161,3 +161,8 @@ Recovery drill cadence:
 ## Database Schema Reference
 
 Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+
+
+## Content Architect Prompt Binding
+
+Before activating `agent_01_content_architect`, copy `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md` into your Claude Project Custom Instructions and upload the required knowledge-base documents referenced in that prompt.
