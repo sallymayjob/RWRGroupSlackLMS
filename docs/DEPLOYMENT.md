@@ -19,6 +19,7 @@ Use `.env.example` as baseline. Critical values:
 - `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`
 - `N8N_ENCRYPTION_KEY`
 - `DB_TYPE`, `DB_POSTGRESDB_*`
+- `NOTION_WORKSPACE_URL`, `NOTION_ROOT_PAGE_ID`, `NOTION_*_DB_ID`
 - `QUEUE_BULL_REDIS_*`
 - `N8N_DIAGNOSTICS_ENABLED=false`
 - `N8N_PERSONALIZATION_ENABLED=false`
@@ -66,6 +67,17 @@ Commands:
 Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)
 - Signing secret validation in workflow logic
+
+## 5A) Notion Workspace IDs
+
+Use your root page URL:
+- `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
+
+Wire these env vars and workflow constants before activating:
+- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
+- `NOTION_COURSES_DB_ID`
+- `NOTION_MONTHS_DB_ID`
+- `NOTION_LESSONS_DB_ID`
 
 ## 6) n8n Workflow Deployment Steps
 

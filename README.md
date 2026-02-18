@@ -86,6 +86,18 @@ See summarized findings in:
 - `reports/stress_test_results.json`
 
 
+
+## Notion Workspace (Provided)
+
+Configured workspace root:
+- `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
+
+Set IDs in `.env`:
+- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
+- `NOTION_COURSES_DB_ID`
+- `NOTION_MONTHS_DB_ID`
+- `NOTION_LESSONS_DB_ID`
+
 ## Schema
 
 Use `docs/SCHEMA.md` plus CSV schema files in `data/` to implement the Notion Curriculum model (Courses → Months → Lessons) and ULC authoring constraints.

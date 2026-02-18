@@ -9,7 +9,8 @@ This project is designed for **n8n workflow automation** with production-ready e
 - Redis (required for queue mode workers)
 - Slack app with slash commands + webhook access
 - Gemini API key
-- Notion integration + database ID
+- Notion integration + database ID(s)
+- Workspace root page: `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
 - LM Data Table backend (API/DB)
 - Google service account with sheet access
 - Email provider for admin reporting
@@ -26,6 +27,7 @@ Critical required values:
 - `DB_POSTGRESDB_*`
 - `QUEUE_BULL_REDIS_*`
 - Slack, Notion, Gemini, Google, Email keys
+- Notion IDs: `NOTION_ROOT_PAGE_ID`, `NOTION_COURSES_DB_ID`, `NOTION_MONTHS_DB_ID`, `NOTION_LESSONS_DB_ID`
 
 ## 3) Import Workflow JSON Files
 
@@ -56,6 +58,24 @@ Register these commands in your Slack app:
 
 Set command Request URL:
 - `https://<your-domain>/webhook/slack-lms-supervisor`
+
+
+## 5A) Notion Workspace Binding (Your Database)
+
+Use your provided workspace URL as the canonical root:
+- `NOTION_WORKSPACE_URL=https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
+
+Set these values in `.env`:
+- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
+- `NOTION_COURSES_DB_ID=<courses_db_id>`
+- `NOTION_MONTHS_DB_ID=<months_db_id>`
+- `NOTION_LESSONS_DB_ID=<lessons_db_id>`
+
+How to extract a DB ID in Notion:
+1. Open the database as a full page.
+2. Copy link.
+3. Use the 32-char ID from URL tail (remove hyphens if needed).
+4. Paste into `.env` and n8n credentials/config nodes.
 
 ## 6) Data Sync Guardrails
 

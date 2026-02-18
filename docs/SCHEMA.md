@@ -2,6 +2,9 @@
 
 This schema package captures your latest workspace and curriculum structure:
 
+- **Workspace URL**: `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
+- **Root Page ID**: `30558a9ec642819785c7d39dbce75ef1`
+
 - **Architecture**: Notion = content authoring, Firestore = learner state, Slack = delivery.
 - **Program shape**: **12 months × 4 weeks × 6 lessons** = **288 lessons**.
 - **Curriculum hierarchy**: **Course → Months → Lessons**.
