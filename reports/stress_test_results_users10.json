@@ -1,0 +1,81 @@
+{
+  "config": {
+    "seed": 42,
+    "max_workers": 10,
+    "personas": [
+      "Fast Finisher",
+      "Steady Learner",
+      "Needs Support",
+      "Feedback Heavy",
+      "At-Risk Catchup"
+    ],
+    "days": 5,
+    "users": 10,
+    "deterministic": true
+  },
+  "totals": {
+    "requests": 384,
+    "successes": 345,
+    "failures": 39,
+    "success_rate": 0.8984,
+    "validation_failures": 19
+  },
+  "latency": {
+    "avg_ms": 306.43,
+    "p50_ms": 303.03,
+    "p95_ms": 397.5,
+    "p99_ms": 422.51,
+    "max_ms": 447.81
+  },
+  "integration_failures": {
+    "notion_write": 2,
+    "lm_table_write": 10,
+    "sheets_write": 10
+  },
+  "command_counts": {
+    "/submit": 145,
+    "/feedback": 33,
+    "/tutor": 93,
+    "/complete": 68,
+    "/enroll": 19,
+    "/quiz": 26
+  },
+  "by_persona": {
+    "Fast Finisher": {
+      "requests": 96,
+      "success_rate": 0.9375,
+      "avg_latency_ms": 311.25,
+      "p95_latency_ms": 406.13,
+      "validation_failures": 1
+    },
+    "Steady Learner": {
+      "requests": 72,
+      "success_rate": 0.9167,
+      "avg_latency_ms": 304.53,
+      "p95_latency_ms": 402.85,
+      "validation_failures": 3
+    },
+    "Needs Support": {
+      "requests": 84,
+      "success_rate": 0.869,
+      "avg_latency_ms": 299.53,
+      "p95_latency_ms": 383.71,
+      "validation_failures": 8
+    },
+    "Feedback Heavy": {
+      "requests": 72,
+      "success_rate": 0.9167,
+      "avg_latency_ms": 309.1,
+      "p95_latency_ms": 391.98,
+      "validation_failures": 2
+    },
+    "At-Risk Catchup": {
+      "requests": 60,
+      "success_rate": 0.8333,
+      "avg_latency_ms": 307.46,
+      "p95_latency_ms": 375.64,
+      "validation_failures": 5
+    }
+  },
+  "generated_at_epoch": 1771377715.5290496
+}

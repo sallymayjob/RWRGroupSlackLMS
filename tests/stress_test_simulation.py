@@ -27,6 +27,12 @@ class Persona:
     submit_accuracy: float
 
 
+@dataclass
+class SimUser:
+    user_id: str
+    persona: Persona
+
+
 PERSONAS: List[Persona] = [
     Persona("Fast Finisher", 8, 0.03, 0.04, 0.97),
     Persona("Steady Learner", 6, 0.06, 0.08, 0.92),
@@ -88,11 +94,11 @@ def command_to_agent(command: str) -> int:
     }.get(command, 6)
 
 
-def process_event(persona: Persona, day: int, event_id: int, seed: int) -> Dict:
+def process_event(user: SimUser, day: int, event_id: int, seed: int) -> Dict:
     # Use per-event deterministic RNG so output is stable even with concurrency.
     rng = random.Random((seed * 1_000_003) + (day * 10_007) + event_id)
 
-    command = pick_command(persona, day, rng)
+    command = pick_command(user.persona, day, rng)
     agent_id = command_to_agent(command)
 
     synthetic_latency_s = 0.0
@@ -108,12 +114,13 @@ def process_event(persona: Persona, day: int, event_id: int, seed: int) -> Dict:
 
     # business-rule failures: invalid submissions for lower accuracy personas
     validation_failed = False
-    if command == "/submit" and rng.random() > persona.submit_accuracy:
+    if command == "/submit" and rng.random() > user.persona.submit_accuracy:
         validation_failed = True
 
     return {
         "event_id": event_id,
-        "persona": persona.name,
+        "user_id": user.user_id,
+        "persona": user.persona.name,
         "day": day,
         "command": command,
         "agent_id": agent_id,
@@ -136,19 +143,32 @@ def percentile(values: List[float], p: float) -> float:
     return values_sorted[f] + (values_sorted[c] - values_sorted[f]) * (k - f)
 
 
-def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
+
+
+def build_user_cohort(total_users: int) -> List[SimUser]:
+    if total_users < 1:
+        raise ValueError("total_users must be >= 1")
+
+    users: List[SimUser] = []
+    for idx in range(total_users):
+        persona = PERSONAS[idx % len(PERSONAS)]
+        users.append(SimUser(user_id=f"U_SIM_{idx+1:04d}", persona=persona))
+    return users
+
+def run_simulation(seed: int, max_workers: int, total_users: int, output_path: Path) -> Dict:
     futures = []
     results: List[Dict] = []
     event_id = 1
+    users = build_user_cohort(total_users)
 
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
         for day in range(1, 6):
-            for persona in PERSONAS:
+            for user in users:
                 # Friday quiz burst multiplier
                 mult = 2 if day == 5 else 1
-                total = persona.commands_per_day * mult
+                total = user.persona.commands_per_day * mult
                 for _ in range(total):
-                    futures.append(ex.submit(process_event, persona, day, event_id, seed))
+                    futures.append(ex.submit(process_event, user, day, event_id, seed))
                     event_id += 1
 
         for f in as_completed(futures):
@@ -187,6 +207,7 @@ def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
             "max_workers": max_workers,
             "personas": [p.name for p in PERSONAS],
             "days": 5,
+            "users": total_users,
             "deterministic": True,
         },
         "totals": {
@@ -218,15 +239,19 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--workers", type=int, default=10)
+    parser.add_argument("--users", type=int, default=5)
     parser.add_argument("--output", default="reports/stress_test_results.json")
     args = parser.parse_args()
 
     if args.workers < 1:
         raise SystemExit("--workers must be >= 1")
+    if args.users < 1:
+        raise SystemExit("--users must be >= 1")
 
-    summary = run_simulation(args.seed, args.workers, Path(args.output))
+    summary = run_simulation(args.seed, args.workers, args.users, Path(args.output))
 
     print("=== Stress Test Summary ===")
+    print(f"Users: {summary['config']['users']}")
     print(f"Requests: {summary['totals']['requests']}")
     print(f"Success Rate: {summary['totals']['success_rate']*100:.2f}%")
     print(f"Avg Latency: {summary['latency']['avg_ms']} ms")

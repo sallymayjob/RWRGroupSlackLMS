@@ -89,12 +89,14 @@ The harness is deterministic by seed (safe for before/after code-review comparis
 Run:
 
 ```bash
-python tests/stress_test_simulation.py --seed 42 --workers 10 --output reports/stress_test_results.json
+python tests/stress_test_simulation.py --seed 42 --workers 10 --users 10 --output reports/stress_test_results.json
 ```
 
 See summarized findings in:
 - `reports/STRESS_TEST_REPORT.md`
 - `reports/stress_test_results.json`
+- `reports/STRESS_TEST_USERS_5_TO_100.md`
+- `reports/stress_test_users_5_to_100_summary.json`
 
 
 
