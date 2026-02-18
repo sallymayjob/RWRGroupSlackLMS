@@ -89,7 +89,7 @@
       "parameters": {
         "workflowId": "agent_02_quiz_master",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent2",
       "name": "Call Agent 2 Quiz",
@@ -104,7 +104,7 @@
       "parameters": {
         "workflowId": "agent_03_tutor",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent3",
       "name": "Call Agent 3 Tutor",
@@ -119,7 +119,7 @@
       "parameters": {
         "workflowId": "agent_04_progress_tracker",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent4",
       "name": "Call Agent 4 Progress",
@@ -134,7 +134,7 @@
       "parameters": {
         "workflowId": "agent_05_feedback_analyst",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent5",
       "name": "Call Agent 5 Feedback",
@@ -149,7 +149,7 @@
       "parameters": {
         "workflowId": "agent_08_enrollment_manager",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent8",
       "name": "Call Agent 8 Enrollment",
@@ -211,7 +211,7 @@
       "parameters": {
         "workflowId": "agent_07_certification",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent7",
       "name": "Call Agent 7 Certification",
@@ -226,7 +226,7 @@
       "parameters": {
         "workflowId": "agent_09_gap_analyst",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent9",
       "name": "Call Agent 9 Gap Analyst",
@@ -241,7 +241,7 @@
       "parameters": {
         "workflowId": "agent_12_reporting",
         "mode": "each",
-        "waitForSubWorkflow": true
+        "waitForSubWorkflow": false
       },
       "id": "callAgent12",
       "name": "Call Agent 12 Reporting",

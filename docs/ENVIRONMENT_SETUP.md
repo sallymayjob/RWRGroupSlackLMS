@@ -33,10 +33,11 @@ Critical required values:
 
 1. In n8n, go to **Workflows → Import from File**.
 2. Import `workflows/slack_supervisor.workflow.json`.
-3. Import `workflows/agent_subworkflow_template.workflow.json`.
-4. Duplicate template to create all 14 agent workflows.
-5. Set workflow names to match README agent map.
-6. Update Execute Workflow nodes in supervisor if names/IDs differ.
+3. Import `workflows/slack_onboard.workflow.json`.
+4. Import `workflows/agent_subworkflow_template.workflow.json`.
+5. Duplicate template to create all 14 agent workflows.
+6. Set workflow names to match README agent map.
+7. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
 
 ## 4) Credentials to Configure in n8n
 
