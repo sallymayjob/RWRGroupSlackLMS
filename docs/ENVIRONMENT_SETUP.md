@@ -107,3 +107,8 @@ For full stack deployment (Docker Compose, reverse proxy, queue workers, hardeni
 - Friday quiz + assessment schedule configured
 - Certification + manager/admin notifications enabled
 - Reporting workflow updates dashboard successfully
+
+
+## Database Schema Reference
+
+Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).

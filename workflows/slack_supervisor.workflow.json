@@ -18,7 +18,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst text = (body.text || '').trim();\n\nlet intent = 'support';\nlet agentId = 6;\n\nif (cmd === '/learn') { intent = 'continue_learning'; agentId = 3; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/progress') { intent = 'view_progress'; agentId = 12; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/cert') { intent = 'issue_certificate'; agentId = 7; }\nelse if (cmd === '/report') { intent = 'view_dashboard'; agentId = 12; }\nelse if (cmd === '/gaps') { intent = 'view_learning_gaps'; agentId = 9; }\nelse if (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack'\n    }\n  }\n}];"
+        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst rawText = String(body.text || '').trim();\nconst text = rawText.slice(0, 1000);\n\nlet intent = 'support';\nlet agentId = 6;\nlet isSupported = true;\n\nif (cmd === '/learn') { intent = 'continue_learning'; agentId = 3; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/progress') { intent = 'view_progress'; agentId = 12; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/cert') { intent = 'issue_certificate'; agentId = 7; }\nelse if (cmd === '/report') { intent = 'view_dashboard'; agentId = 12; }\nelse if (cmd === '/gaps') { intent = 'view_learning_gaps'; agentId = 9; }\nelse if (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\nelse { isSupported = false; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    isSupported,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null,\n      userName: body.user_name || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack',\n      requestId: body.trigger_id || body.api_app_id || null,\n      textTruncated: rawText.length > 1000\n    }\n  }\n}];"
       },
       "id": "parsePayload",
       "name": "Parse Slack Payload",
@@ -163,7 +163,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $json.isValid === false ? { ok: false, error: 'unauthorized', reason: $json.reason } : { ok: true, intent: $json.intent, agentId: $json.agentId } }}"
+        "responseBody": "={{ $json.isValid === false ? { ok: false, error: 'unauthorized', reason: $json.reason } : ($json.isSupported === false ? { ok: false, error: 'unsupported_command', command: $json.command } : { ok: true, intent: $json.intent, agentId: $json.agentId }) }}"
       },
       "id": "respond",
       "name": "Respond to Slack",

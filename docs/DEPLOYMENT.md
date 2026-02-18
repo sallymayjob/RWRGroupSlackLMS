@@ -156,3 +156,8 @@ Recovery drill cadence:
 3. Validate one full weekly cycle (quiz + certification)
 4. Promote env vars and credentials to production
 5. Activate workflows in production during low traffic window
+
+
+## Database Schema Reference
+
+Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).

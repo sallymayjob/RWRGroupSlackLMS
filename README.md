@@ -16,6 +16,8 @@ It orchestrates a supervisor workflow that routes Slack commands/events to speci
 - `docs/DEPLOYMENT.md` → Full production deployment details
 - `docs/SECURITY_REVIEW.md` → Security vulnerabilities identified and remediation status
 - `docs/SCHEMA.md` → Notion curriculum schema + Universal Lesson Canvas constraints
+- `docs/DATABASE_SCHEMA.md` → operational SQL schema overview
+- `docs/CODE_REVIEW.md` → code review findings and remediations
 - `docs/SLACK_MANIFEST_INTEGRATION.md` → command/event URL mapping for the provided Slack manifest
 - `docs/slack_app_manifest.json` → Slack app manifest currently used for command/event wiring
 - `docker-compose.yml` → Self-hosted baseline stack (n8n + postgres + redis)
@@ -110,6 +112,8 @@ Set IDs in `.env`:
 ## Schema
 
 Use `docs/SCHEMA.md` plus CSV schema files in `data/` to implement the Notion Curriculum model (Courses → Months → Lessons) and ULC authoring constraints.
+
+Operational SQL schema: `data/lms_database_schema.sql` (overview in `docs/DATABASE_SCHEMA.md`).
 
 
 ## Security
