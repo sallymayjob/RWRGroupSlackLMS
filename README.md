@@ -121,3 +121,16 @@ Operational SQL schema: `data/lms_database_schema.sql` (overview in `docs/DATABA
 ## Security
 
 See `docs/SECURITY_REVIEW.md` for vulnerability findings, fixes, and remaining hardening recommendations.
+
+
+## QA Validation (Performance, Regression, Penetration-Style)
+
+Run:
+
+```bash
+python tests/qa_performance_regression_pentest.py
+```
+
+Outputs:
+- `reports/qa_validation_summary.json`
+- `reports/QA_VALIDATION_REPORT.md`

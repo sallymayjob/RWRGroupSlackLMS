@@ -1,0 +1,88 @@
+{
+  "performance_runs": [
+    {
+      "users": 5,
+      "workers": 5,
+      "requests": 192,
+      "success_rate": 0.9062,
+      "p95_ms": 395.74,
+      "p99_ms": 422.08
+    },
+    {
+      "users": 25,
+      "workers": 25,
+      "requests": 960,
+      "success_rate": 0.9021,
+      "p95_ms": 396.58,
+      "p99_ms": 426.79
+    },
+    {
+      "users": 100,
+      "workers": 100,
+      "requests": 3840,
+      "success_rate": 0.9104,
+      "p95_ms": 398.55,
+      "p99_ms": 425.52
+    }
+  ],
+  "regression_checks": [
+    {
+      "users": 5,
+      "name": "success_rate_regression",
+      "ok": true,
+      "detail": "now=0.9062, baseline=0.9062, threshold=0.8862"
+    },
+    {
+      "users": 5,
+      "name": "p95_latency_regression",
+      "ok": true,
+      "detail": "now=395.74, baseline=395.74, threshold=410.74"
+    },
+    {
+      "users": 25,
+      "name": "success_rate_regression",
+      "ok": true,
+      "detail": "now=0.9021, baseline=0.9021, threshold=0.8821"
+    },
+    {
+      "users": 25,
+      "name": "p95_latency_regression",
+      "ok": true,
+      "detail": "now=396.58, baseline=396.58, threshold=411.58"
+    },
+    {
+      "users": 100,
+      "name": "success_rate_regression",
+      "ok": true,
+      "detail": "now=0.9104, baseline=0.9104, threshold=0.8904"
+    },
+    {
+      "users": 100,
+      "name": "p95_latency_regression",
+      "ok": true,
+      "detail": "now=398.55, baseline=398.55, threshold=413.55"
+    }
+  ],
+  "penetration_style_checks": [
+    {
+      "name": "slack_signature_validation_node",
+      "ok": true,
+      "detail": "workflow contains signature validation gate nodes"
+    },
+    {
+      "name": "unsupported_command_blocking",
+      "ok": true,
+      "detail": "webhook response includes unsupported command rejection"
+    },
+    {
+      "name": "n8n_port_bound_loopback",
+      "ok": true,
+      "detail": "docker compose does not expose n8n to all interfaces"
+    },
+    {
+      "name": "pinned_n8n_image",
+      "ok": true,
+      "detail": "docker compose avoids floating latest tag"
+    }
+  ]
+}
