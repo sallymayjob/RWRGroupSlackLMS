@@ -28,48 +28,134 @@
     },
     {
       "parameters": {
-        "dataType": "number",
-        "value1": "={{$json.agentId}}",
         "rules": {
-          "number": [
+          "values": [
             {
-              "operation": "equal",
-              "value2": 2
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 3
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 4
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 5
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 7
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 7,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 8
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 9
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 9,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "operation": "equal",
-              "value2": 12
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.agentId}}",
+                    "rightValue": 12,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         }
       },
       "name": "Switch by Agent",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
+      "typeVersion": 3,
       "position": [
         1080,
         240
