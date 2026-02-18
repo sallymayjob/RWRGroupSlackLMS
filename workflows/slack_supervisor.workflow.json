@@ -1,467 +1,227 @@
 {
-  "name": "slack_supervisor_router",
+  "name": "Slack LMS Supervisor Router (Clean)",
   "nodes": [
     {
       "parameters": {
-        "path": "supervisor",
         "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "path": "supervisor",
+        "options": {}
       },
-      "id": "webhookIn",
       "name": "Slack Supervisor Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        180,
-        320
-      ]
+      "typeVersion": 1,
+      "position": [-800, 300]
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nconst cmd = (body.command || '').trim();\nconst rawText = String(body.text || '').trim();\nconst text = rawText.slice(0, 1000);\n\nlet intent = 'support';\nlet agentId = 6;\nlet isSupported = true;\n\nif (cmd === '/learn') { intent = 'continue_learning'; agentId = 3; }\nelse if (cmd === '/quiz') { intent = 'weekly_quiz'; agentId = 2; }\nelse if (cmd === '/progress') { intent = 'view_progress'; agentId = 12; }\nelse if (cmd === '/enroll') { intent = 'enroll_user'; agentId = 8; }\nelse if (cmd === '/cert') { intent = 'issue_certificate'; agentId = 7; }\nelse if (cmd === '/report') { intent = 'view_dashboard'; agentId = 12; }\nelse if (cmd === '/gaps') { intent = 'view_learning_gaps'; agentId = 9; }\nelse if (cmd === '/submit') { intent = 'submit_lesson_code'; agentId = 4; }\nelse if (cmd === '/complete') { intent = 'complete_lesson'; agentId = 4; }\nelse if (cmd === '/feedback') { intent = 'lesson_feedback'; agentId = 5; }\nelse if (cmd === '/tutor') { intent = 'tutor_help'; agentId = 3; }\nelse { isSupported = false; }\n\nreturn [{\n  json: {\n    intent,\n    agentId,\n    isSupported,\n    command: cmd,\n    text,\n    learner: {\n      slackUserId: body.user_id || null,\n      userName: body.user_name || null\n    },\n    meta: {\n      receivedAt: new Date().toISOString(),\n      source: 'slack',\n      requestId: body.trigger_id || body.api_app_id || null,\n      textTruncated: rawText.length > 1000\n    }\n  }\n}];"
+        "jsCode": "const root = $json.body ?? $json;\n\nreturn [{\n  json: {\n    team_id: root.team_id ?? '',\n    team_domain: root.team_domain ?? '',\n\n    channel_id: root.channel_id ?? '',\n    channel_name: root.channel_name ?? '',\n\n    user_id: root.user_id ?? '',\n    user_name: root.user_name ?? '',\n\n    command: root.command ?? '',\n    text: root.text ?? '',\n\n    response_url: root.response_url ?? '',\n    trigger_id: root.trigger_id ?? '',\n    api_app_id: root.api_app_id ?? '',\n    is_enterprise_install: root.is_enterprise_install ?? false,\n\n    raw_headers: root.headers ?? {},\n    raw_params: root.params ?? {},\n    raw_query: root.query ?? {}\n  }\n}];"
       },
-      "id": "parsePayload",
       "name": "Parse Slack Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        840,
-        240
-      ]
+      "position": [-600, 300]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"team_id\": \"{{ $json.team_id || '' }}\",\n  \"team_domain\": \"{{ $json.team_domain || '' }}\",\n\n  \"channel_id\": \"{{ $json.channel_id || '' }}\",\n  \"channel_name\": \"{{ $json.channel_name || '' }}\",\n\n  \"user_id\": \"{{ $json.user_id || '' }}\",\n  \"user_name\": \"{{ $json.user_name || '' }}\",\n\n  \"command\": \"{{ $json.command || '' }}\",\n  \"text\": \"{{ $json.text || '' }}\",\n\n  \"lesson\": {{ Number(($json.text || '').split(' ')[1] || 0) }},\n\n  \"response_url\": \"{{ $json.response_url || '' }}\",\n  \"trigger_id\": \"{{ $json.trigger_id || '' }}\",\n  \"api_app_id\": \"{{ $json.api_app_id || '' }}\",\n  \"is_enterprise_install\": {{ $json.is_enterprise_install || false }},\n\n  \"raw_headers\": {{ JSON.stringify($json.raw_headers || {}) }},\n  \"raw_params\": {{ JSON.stringify($json.raw_params || {}) }},\n  \"raw_query\": {{ JSON.stringify($json.raw_query || {}) }}\n}\n",
+        "includeOtherFields": true
+      },
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-400, 300]
     },
     {
       "parameters": {
         "rules": {
-          "number": [
+          "values": [
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 2
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/onboard",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 3
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/enroll",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 4
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/progress",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 5
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/learn",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 7
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/quiz",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 8
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/cert",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 9
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/report",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             },
             {
-              "value1": "={{$json.agentId}}",
-              "operation": "equal",
-              "value2": 12
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "/gaps",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         }
       },
-      "id": "switchByAgent",
-      "name": "Switch by Agent",
+      "name": "Switch by Command",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 3,
-      "position": [
-        1080,
-        240
-      ]
+      "typeVersion": 3.4,
+      "position": [-200, 300]
     },
     {
-      "parameters": {
-        "workflowId": "agent_02_quiz_master",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent2",
-      "name": "Call Agent 2 Quiz",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 13 — Onboarding",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        120
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 0]
     },
     {
-      "parameters": {
-        "workflowId": "agent_03_tutor",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent3",
-      "name": "Call Agent 3 Tutor",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 08 — Enrollment",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        220
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 100]
     },
     {
-      "parameters": {
-        "workflowId": "agent_04_progress_tracker",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent4",
-      "name": "Call Agent 4 Progress",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 04 — Progress",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        320
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 200]
     },
     {
-      "parameters": {
-        "workflowId": "agent_05_feedback_analyst",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent5",
-      "name": "Call Agent 5 Feedback",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 03 — Tutor",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        420
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 300]
     },
     {
-      "parameters": {
-        "workflowId": "agent_08_enrollment_manager",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent8",
-      "name": "Call Agent 8 Enrollment",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 02 — Quiz",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        520
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 400]
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json.isValid === false ? { ok: false, error: 'unauthorized', reason: $json.reason } : ($json.isSupported === false ? { ok: false, error: 'unsupported_command', command: $json.command } : { ok: true, intent: $json.intent, agentId: $json.agentId }) }}"
-      },
-      "id": "respond",
-      "name": "Respond to Slack",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        1640,
-        240
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst headers = $json.headers || {};\nconst body = $json.body || $json;\nconst ts = headers['x-slack-request-timestamp'] || headers['X-Slack-Request-Timestamp'];\nconst sig = headers['x-slack-signature'] || headers['X-Slack-Signature'];\nconst secret = $env.SLACK_SIGNING_SECRET;\n\nif (!secret) {\n  throw new Error('SLACK_SIGNING_SECRET is not set');\n}\n\nif (!ts || !sig) {\n  return [{ json: { isValid: false, reason: 'missing_signature_headers', body } }];\n}\n\nconst age = Math.abs(Math.floor(Date.now() / 1000) - Number(ts));\nif (!Number.isFinite(age) || age > 300) {\n  return [{ json: { isValid: false, reason: 'stale_timestamp', body } }];\n}\n\nconst rawBody = typeof body === 'string' ? body : new URLSearchParams(body).toString();\nconst baseString = `v0:${ts}:${rawBody}`;\nconst expected = `v0=${crypto.createHmac('sha256', secret).update(baseString).digest('hex')}`;\nconst provided = String(sig).trim();\nconst ok = (provided.length === expected.length) && crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));\n\nreturn [{ json: { isValid: ok, reason: ok ? 'ok' : 'invalid_signature', body } }];"
-      },
-      "id": "validateSlackSignature",
-      "name": "Validate Slack Signature",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        420,
-        240
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{$json.isValid}}",
-              "operation": "isTrue"
-            }
-          ]
-        }
-      },
-      "id": "ifSignatureValid",
-      "name": "Signature Valid?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        620,
-        240
-      ]
-    },
-    {
-      "parameters": {
-        "workflowId": "agent_07_certification",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent7",
-      "name": "Call Agent 7 Certification",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 07 — Certification",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        620
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 500]
     },
     {
-      "parameters": {
-        "workflowId": "agent_09_gap_analyst",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent9",
-      "name": "Call Agent 9 Gap Analyst",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 12 — Reporting",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        720
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 600]
     },
     {
-      "parameters": {
-        "workflowId": "agent_12_reporting",
-        "mode": "each",
-        "waitForSubWorkflow": true
-      },
-      "id": "callAgent12",
-      "name": "Call Agent 12 Reporting",
+      "parameters": { "workflowId": "", "options": {} },
+      "name": "Call Agent 09 — Gap Analyst",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1360,
-        820
-      ]
+      "typeVersion": 1.3,
+      "position": [50, 700]
     }
   ],
   "connections": {
     "Slack Supervisor Webhook": {
-      "main": [
-        [
-          {
-            "node": "Validate Slack Signature",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Parse Slack Payload", "type": "main", "index": 0 }]]
     },
     "Parse Slack Payload": {
-      "main": [
-        [
-          {
-            "node": "Switch by Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
     },
-    "Switch by Agent": {
-      "main": [
-        [
-          {
-            "node": "Call Agent 2 Quiz",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 3 Tutor",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 4 Progress",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 5 Feedback",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 7 Certification",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 8 Enrollment",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 9 Gap Analyst",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Call Agent 12 Reporting",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Edit Fields": {
+      "main": [[{ "node": "Switch by Command", "type": "main", "index": 0 }]]
     },
-    "Call Agent 2 Quiz": {
+    "Switch by Command": {
       "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 3 Tutor": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 4 Progress": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 5 Feedback": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 8 Enrollment": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Slack Signature": {
-      "main": [
-        [
-          {
-            "node": "Signature Valid?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Signature Valid?": {
-      "main": [
-        [
-          {
-            "node": "Parse Slack Payload",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 7 Certification": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 9 Gap Analyst": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Agent 12 Reporting": {
-      "main": [
-        [
-          {
-            "node": "Respond to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Call Agent 13 — Onboarding", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 08 — Enrollment", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 04 — Progress", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 03 — Tutor", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 02 — Quiz", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 07 — Certification", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 12 — Reporting", "type": "main", "index": 0 }],
+        [{ "node": "Call Agent 09 — Gap Analyst", "type": "main", "index": 0 }]
       ]
     }
   },
   "active": false,
-  "settings": {},
-  "versionId": "replace-with-generated-version-id"
+  "settings": {
+    "executionOrder": "v1"
+  }
 }
