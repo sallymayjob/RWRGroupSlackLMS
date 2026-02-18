@@ -14,6 +14,7 @@ It orchestrates a supervisor workflow that routes Slack commands/events to speci
 - `workflows/payload_examples.json` → Example Slack payload and normalized command JSON
 - `docs/ENVIRONMENT_SETUP.md` → Environment + credentials + go-live steps
 - `docs/DEPLOYMENT.md` → Full production deployment details
+- `docs/SECURITY_REVIEW.md` → Security vulnerabilities identified and remediation status
 - `docs/SCHEMA.md` → Notion curriculum schema + Universal Lesson Canvas constraints
 - `docker-compose.yml` → Self-hosted baseline stack (n8n + postgres + redis)
 
@@ -88,3 +89,8 @@ See summarized findings in:
 ## Schema
 
 Use `docs/SCHEMA.md` plus CSV schema files in `data/` to implement the Notion Curriculum model (Courses → Months → Lessons) and ULC authoring constraints.
+
+
+## Security
+
+See `docs/SECURITY_REVIEW.md` for vulnerability findings, fixes, and remaining hardening recommendations.
