@@ -9,63 +9,72 @@
       "Feedback Heavy",
       "At-Risk Catchup"
     ],
-    "days": 5
+    "days": 5,
+    "deterministic": true
   },
   "totals": {
     "requests": 192,
-    "successes": 181,
-    "failures": 11,
-    "success_rate": 0.9427,
-    "validation_failures": 5
+    "successes": 174,
+    "failures": 18,
+    "success_rate": 0.9062,
+    "validation_failures": 7
   },
   "latency": {
-    "avg_ms": 311.57,
-    "p50_ms": 317.17,
-    "p95_ms": 396.18,
-    "p99_ms": 422.56,
-    "max_ms": 451.5
+    "avg_ms": 307.63,
+    "p50_ms": 303.58,
+    "p95_ms": 395.74,
+    "p99_ms": 422.08,
+    "max_ms": 447.81
   },
   "integration_failures": {
-    "notion_write": 1,
-    "lm_table_write": 5,
-    "sheets_write": 2
+    "notion_write": 2,
+    "lm_table_write": 4,
+    "sheets_write": 5
+  },
+  "command_counts": {
+    "/tutor": 56,
+    "/submit": 70,
+    "/complete": 27,
+    "/enroll": 10,
+    "/feedback": 18,
+    "/quiz": 11
   },
   "by_persona": {
     "Fast Finisher": {
       "requests": 48,
       "success_rate": 0.9583,
-      "avg_latency_ms": 308.19,
-      "p95_latency_ms": 405.9,
+      "avg_latency_ms": 304.39,
+      "p95_latency_ms": 400.0,
       "validation_failures": 1
     },
     "Steady Learner": {
       "requests": 36,
-      "success_rate": 0.9722,
-      "avg_latency_ms": 318.41,
-      "p95_latency_ms": 385.49,
-      "validation_failures": 0
+      "success_rate": 0.9167,
+      "avg_latency_ms": 300.89,
+      "p95_latency_ms": 388.67,
+      "validation_failures": 1
     },
     "Needs Support": {
       "requests": 42,
-      "success_rate": 0.9524,
-      "avg_latency_ms": 315.99,
-      "p95_latency_ms": 395.85,
-      "validation_failures": 0
+      "success_rate": 0.9048,
+      "avg_latency_ms": 309.83,
+      "p95_latency_ms": 396.86,
+      "validation_failures": 1
     },
     "Feedback Heavy": {
       "requests": 36,
-      "success_rate": 0.9444,
-      "avg_latency_ms": 309.24,
-      "p95_latency_ms": 401.25,
+      "success_rate": 0.9167,
+      "avg_latency_ms": 324.97,
+      "p95_latency_ms": 400.58,
       "validation_failures": 1
     },
     "At-Risk Catchup": {
       "requests": 30,
-      "success_rate": 0.8667,
-      "avg_latency_ms": 305.37,
-      "p95_latency_ms": 362.16,
+      "success_rate": 0.8,
+      "avg_latency_ms": 296.99,
+      "p95_latency_ms": 367.58,
       "validation_failures": 3
     }
   },
-  "generated_at_epoch": 1771372884.4581168
+  "generated_at_epoch": 1771375989.385707
 }

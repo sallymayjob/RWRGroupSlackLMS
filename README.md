@@ -72,6 +72,7 @@ Use idempotency key: `source:entity_id:version`.
 ## Stress Testing (5 Personas)
 
 A synthetic stress test harness is included to evaluate routing and sync behavior for five learner personas.
+The harness is deterministic by seed (safe for before/after code-review comparisons).
 
 Run:
 

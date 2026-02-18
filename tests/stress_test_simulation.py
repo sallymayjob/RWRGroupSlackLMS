@@ -53,28 +53,28 @@ FAILURE_RATES = {
 }
 
 
-def stage_time(stage: str) -> float:
+def stage_time(stage: str, rng: random.Random) -> float:
     low, high = LATENCY_PROFILE[stage]
-    return random.uniform(low, high)
+    return rng.uniform(low, high)
 
 
-def maybe_fail(stage: str) -> bool:
-    return random.random() < FAILURE_RATES[stage]
+def maybe_fail(stage: str, rng: random.Random) -> bool:
+    return rng.random() < FAILURE_RATES[stage]
 
 
-def pick_command(persona: Persona, day: int) -> str:
+def pick_command(persona: Persona, day: int, rng: random.Random) -> str:
     # Heavier /quiz usage Friday (day=5)
     pool = ["/submit", "/complete", "/tutor", "/enroll"]
     weights = [0.44, 0.18, 0.18, 0.07]
 
-    if random.random() < persona.feedback_rate:
+    if rng.random() < persona.feedback_rate:
         return "/feedback"
-    if random.random() < persona.support_rate:
+    if rng.random() < persona.support_rate:
         return "/tutor"
-    if day == 5 and random.random() < 0.25:
+    if day == 5 and rng.random() < 0.25:
         return "/quiz"
 
-    return random.choices(pool, weights=weights, k=1)[0]
+    return rng.choices(pool, weights=weights, k=1)[0]
 
 
 def command_to_agent(command: str) -> int:
@@ -88,29 +88,28 @@ def command_to_agent(command: str) -> int:
     }.get(command, 6)
 
 
-def process_event(persona: Persona, day: int, event_id: int) -> Dict:
-    t0 = time.perf_counter()
+def process_event(persona: Persona, day: int, event_id: int, seed: int) -> Dict:
+    # Use per-event deterministic RNG so output is stable even with concurrency.
+    rng = random.Random((seed * 1_000_003) + (day * 10_007) + event_id)
 
-    command = pick_command(persona, day)
+    command = pick_command(persona, day, rng)
     agent_id = command_to_agent(command)
 
-    # synthetic path
-    time.sleep(stage_time("parse"))
-    time.sleep(stage_time("route"))
-    time.sleep(stage_time("agent"))
+    synthetic_latency_s = 0.0
+    synthetic_latency_s += stage_time("parse", rng)
+    synthetic_latency_s += stage_time("route", rng)
+    synthetic_latency_s += stage_time("agent", rng)
 
     write_failures = []
     for stage in ("notion_write", "lm_table_write", "sheets_write"):
-        time.sleep(stage_time(stage))
-        if maybe_fail(stage):
+        synthetic_latency_s += stage_time(stage, rng)
+        if maybe_fail(stage, rng):
             write_failures.append(stage)
 
     # business-rule failures: invalid submissions for lower accuracy personas
     validation_failed = False
-    if command == "/submit" and random.random() > persona.submit_accuracy:
+    if command == "/submit" and rng.random() > persona.submit_accuracy:
         validation_failed = True
-
-    elapsed_ms = (time.perf_counter() - t0) * 1000
 
     return {
         "event_id": event_id,
@@ -118,7 +117,7 @@ def process_event(persona: Persona, day: int, event_id: int) -> Dict:
         "day": day,
         "command": command,
         "agent_id": agent_id,
-        "latency_ms": elapsed_ms,
+        "latency_ms": synthetic_latency_s * 1000,
         "write_failures": write_failures,
         "validation_failed": validation_failed,
         "success": not write_failures and not validation_failed,
@@ -138,8 +137,6 @@ def percentile(values: List[float], p: float) -> float:
 
 
 def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
-    random.seed(seed)
-
     futures = []
     results: List[Dict] = []
     event_id = 1
@@ -151,7 +148,7 @@ def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
                 mult = 2 if day == 5 else 1
                 total = persona.commands_per_day * mult
                 for _ in range(total):
-                    futures.append(ex.submit(process_event, persona, day, event_id))
+                    futures.append(ex.submit(process_event, persona, day, event_id, seed))
                     event_id += 1
 
         for f in as_completed(futures):
@@ -166,7 +163,9 @@ def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
         "lm_table_write": 0,
         "sheets_write": 0,
     }
+    command_counts: Dict[str, int] = {}
     for r in results:
+        command_counts[r["command"]] = command_counts.get(r["command"], 0) + 1
         for stage in r["write_failures"]:
             integration_failures[stage] += 1
 
@@ -188,6 +187,7 @@ def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
             "max_workers": max_workers,
             "personas": [p.name for p in PERSONAS],
             "days": 5,
+            "deterministic": True,
         },
         "totals": {
             "requests": len(results),
@@ -204,6 +204,7 @@ def run_simulation(seed: int, max_workers: int, output_path: Path) -> Dict:
             "max_ms": round(max(latencies), 2) if latencies else 0.0,
         },
         "integration_failures": integration_failures,
+        "command_counts": command_counts,
         "by_persona": by_persona,
         "generated_at_epoch": time.time(),
     }
@@ -219,6 +220,9 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--output", default="reports/stress_test_results.json")
     args = parser.parse_args()
+
+    if args.workers < 1:
+        raise SystemExit("--workers must be >= 1")
 
     summary = run_simulation(args.seed, args.workers, Path(args.output))
 
