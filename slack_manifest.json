@@ -64,6 +64,13 @@
                 "url": "https://n8n.srv1371300.hstgr.cloud/webhook/onboard",
                 "description": "Onboard new Employees",
                 "should_escape": false
+            },
+            {
+                "command": "/backup",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/backup",
+                "description": "Back up LMS data to Google Sheets",
+                "usage_hint": "Trigger manual backup",
+                "should_escape": false
             }
         ]
     },
