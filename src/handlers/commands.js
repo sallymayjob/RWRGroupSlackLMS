@@ -15,9 +15,12 @@ const SUPERVISOR_COMMANDS = [
   "/submit",
   "/progress",
   "/enroll",
+  "/unenroll",
   "/cert",
   "/report",
   "/gaps",
+  "/courses",
+  "/help",
 ];
 
 module.exports = function registerCommands(app) {

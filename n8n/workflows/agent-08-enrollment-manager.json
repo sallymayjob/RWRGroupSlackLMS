@@ -49,7 +49,7 @@
         "contentType": "json",
         "body": {
           "response_type": "ephemeral",
-          "text": "Please provide a course code. Usage: `/enroll <COURSE-CODE>`\n\nAsk your manager or LMS admin for the course code."
+          "text": "Please provide a course code. Usage: `/enroll <COURSE-CODE>`\n\nUse `/courses` to browse available courses, or ask your LMS admin for a code."
         },
         "options": {}
       },
@@ -62,8 +62,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Upsert user\nINSERT INTO users (slack_user_id, slack_team_id, display_name)\nVALUES ('{{ $json.user_id }}', '{{ $json.team_id }}', '{{ $json.user_name }}')\nON CONFLICT (slack_user_id) DO UPDATE SET display_name = EXCLUDED.display_name;\n\n-- Find course + first module\nSELECT\n  c.id AS course_id,\n  c.title AS course_title,\n  c.code AS course_code,\n  c.description AS course_description,\n  m.id AS first_module_id,\n  m.title AS first_module_title,\n  (SELECT COUNT(*) FROM modules WHERE course_id = c.id) AS total_modules,\n  (SELECT id FROM users WHERE slack_user_id = '{{ $json.user_id }}') AS user_id,\n  (\n    SELECT id FROM enrolments e2\n    WHERE e2.user_id = (SELECT id FROM users WHERE slack_user_id = '{{ $json.user_id }}')\n      AND e2.course_id = c.id\n  ) AS existing_enrolment_id\nFROM courses c\nLEFT JOIN modules m ON m.id = (\n  SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n)\nWHERE UPPER(c.code) = '{{ $json.courseCode }}';",
-        "options": {}
+        "query": "WITH upsert AS (\n  INSERT INTO users (slack_user_id, slack_team_id, display_name)\n  VALUES ($1, $2, $3)\n  ON CONFLICT (slack_user_id) DO UPDATE SET display_name = EXCLUDED.display_name\n  RETURNING id\n)\nSELECT\n  c.id AS course_id,\n  c.title AS course_title,\n  c.code AS course_code,\n  c.description AS course_description,\n  m.id AS first_module_id,\n  m.title AS first_module_title,\n  (SELECT COUNT(*) FROM modules WHERE course_id = c.id) AS total_modules,\n  (SELECT id FROM upsert) AS user_id,\n  (\n    SELECT id FROM enrolments e2\n    WHERE e2.user_id = (SELECT id FROM upsert)\n      AND e2.course_id = c.id\n  ) AS existing_enrolment_id\nFROM courses c\nLEFT JOIN modules m ON m.id = (\n  SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n)\nWHERE UPPER(c.code) = $4;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id, $json.team_id, $json.user_name, $json.courseCode]) }}"
+        }
       },
       "id": "a8000000-0000-0000-0000-000000000005",
       "name": "Lookup Course & Upsert User",
@@ -102,7 +104,7 @@
         "contentType": "json",
         "body": {
           "response_type": "ephemeral",
-          "text": "Course code *{{ $('Extract Course Code').item.json.courseCode }}* not found. Please check the code and try again, or contact your LMS admin."
+          "text": "Course code *{{ $('Extract Course Code').item.json.courseCode }}* not found. Use `/courses` to see what's available, or contact your LMS admin."
         },
         "options": {}
       },
@@ -155,8 +157,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO enrolments (user_id, course_id, current_module_id)\nVALUES ({{ $json.user_id }}, {{ $json.course_id }}, {{ $json.first_module_id }})\nRETURNING id;",
-        "options": {}
+        "query": "INSERT INTO enrolments (user_id, course_id, current_module_id)\nVALUES ($1, $2, $3)\nRETURNING id;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id, $json.course_id, $json.first_module_id]) }}"
+        }
       },
       "id": "a8000000-0000-0000-0000-000000000010",
       "name": "Create Enrolment",
@@ -240,7 +244,7 @@
     },
     "Create Enrolment": { "main": [[{ "node": "Send Enrolment Confirmation", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "BjxEx4DjqMwlkrU4",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Enrollment" }]

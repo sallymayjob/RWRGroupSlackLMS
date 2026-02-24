@@ -195,6 +195,72 @@
                 ],
                 "combinator": "and"
               }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a5000000-0000-0000-0000-sw0000000001",
+                    "leftValue": "/courses",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a6000000-0000-0000-0000-sw0000000001",
+                    "leftValue": "/help",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a10000000-0000-0000-0000-sw000000001",
+                    "leftValue": "/unenroll",
+                    "rightValue": "={{ $json.command }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         },
@@ -420,6 +486,81 @@
       ],
       "id": "93e6cbae-c305-4d20-a8f6-088d24626536",
       "name": "Call 'Agent 09 — Gap Analyst (Gemini)'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "a5CatalogWrkflw01",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/a5CatalogWrkflw01",
+          "cachedResultName": "Agent 05 — Course Catalog"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [-2800, 2608],
+      "id": "a5000000-0000-0000-0000-000000000010",
+      "name": "Call 'Agent 05 — Course Catalog'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "a6HelpWorkflow001",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/a6HelpWorkflow001",
+          "cachedResultName": "Agent 06 — Help"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [-2800, 2800],
+      "id": "a6000000-0000-0000-0000-000000000010",
+      "name": "Call 'Agent 06 — Help'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "a10UnEnrollAgent1",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/a10UnEnrollAgent1",
+          "cachedResultName": "Agent 10 — Unenroll"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [-2800, 2992],
+      "id": "a10000000-0000-0000-0000-000000000010",
+      "name": "Call 'Agent 10 — Unenroll'"
     },
     {
       "parameters": {
@@ -665,9 +806,33 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Call 'Agent 05 — Course Catalog'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agent 06 — Help'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agent 10 — Unenroll'",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
+    "Call 'Agent 05 — Course Catalog'": { "main": [[]] },
+    "Call 'Agent 06 — Help'": { "main": [[]] },
+    "Call 'Agent 10 — Unenroll'": { "main": [[]] },
     "When clicking 'Execute workflow'": {
       "main": [
         []

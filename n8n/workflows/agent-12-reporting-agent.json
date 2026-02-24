@@ -94,7 +94,7 @@
     "Get LMS Stats": { "main": [[{ "node": "Gemini Generate Report", "type": "main", "index": 0 }]] },
     "Gemini Generate Report": { "main": [[{ "node": "Send Dashboard to Slack", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "HpgyOs9wKZz2mAQd",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Gemini" }, { "name": "Reporting" }]

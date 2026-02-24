@@ -12,8 +12,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  u.id AS user_id,\n  u.display_name,\n  u.email,\n  e.id AS enrolment_id,\n  c.id AS course_id,\n  c.title AS course_title,\n  c.code AS course_code,\n  (\n    SELECT COUNT(*) FROM modules WHERE course_id = c.id\n  ) AS total_modules,\n  (\n    SELECT COUNT(*) FROM progress p\n    JOIN modules m ON m.id = p.module_id\n    WHERE p.user_id = u.id AND m.course_id = c.id\n  ) AS completed_modules,\n  (\n    SELECT id FROM certificates\n    WHERE user_id = u.id AND course_id = c.id\n  ) AS existing_cert_id\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN courses c ON c.id = e.course_id\nWHERE u.slack_user_id = '{{ $json.user_id }}'\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
-        "options": {}
+        "query": "SELECT\n  u.id AS user_id,\n  u.display_name,\n  u.email,\n  e.id AS enrolment_id,\n  c.id AS course_id,\n  c.title AS course_title,\n  c.code AS course_code,\n  (\n    SELECT COUNT(*) FROM modules WHERE course_id = c.id\n  ) AS total_modules,\n  (\n    SELECT COUNT(*) FROM progress p\n    JOIN modules m ON m.id = p.module_id\n    WHERE p.user_id = u.id AND m.course_id = c.id\n  ) AS completed_modules,\n  (\n    SELECT id FROM certificates\n    WHERE user_id = u.id AND course_id = c.id\n  ) AS existing_cert_id\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN courses c ON c.id = e.course_id\nWHERE u.slack_user_id = $1\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id]) }}"
+        }
       },
       "id": "a7000000-0000-0000-0000-000000000002",
       "name": "Check Completion Status",
@@ -105,8 +107,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO certificates (user_id, course_id)\nVALUES ({{ $json.user_id }}, {{ $json.course_id }})\nON CONFLICT (user_id, course_id) DO NOTHING\nRETURNING id, issued_at;\n\nUPDATE enrolments SET completed_at = NOW()\nWHERE id = {{ $json.enrolment_id }} AND completed_at IS NULL;",
-        "options": {}
+        "query": "WITH cert AS (\n  INSERT INTO certificates (user_id, course_id)\n  VALUES ($1, $2)\n  ON CONFLICT (user_id, course_id) DO NOTHING\n  RETURNING id, issued_at\n),\nenrol_update AS (\n  UPDATE enrolments SET completed_at = NOW()\n  WHERE id = $3 AND completed_at IS NULL\n  RETURNING id\n)\nSELECT id, TO_CHAR(issued_at, 'DD Month YYYY') AS issued_at_formatted FROM cert;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Check Completion Status').item.json.user_id, $('Check Completion Status').item.json.course_id, $('Check Completion Status').item.json.enrolment_id]) }}"
+        }
       },
       "id": "a7000000-0000-0000-0000-000000000007",
       "name": "Issue Certificate",
@@ -118,7 +122,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are issuing a certificate of completion for the RWR Group LMS.\n\nLearner name: {{ $('Check Completion Status').item.json.display_name || $('When Called by Supervisor').item.json.user_name }}\nCourse completed: {{ $('Check Completion Status').item.json.course_title }}\nDate: {{ new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }) }}\n\nWrite a celebratory certificate announcement message in Slack mrkdwn format.\nInclude:\n- Congratulations header\n- What they achieved\n- The significance of the certification for RWR Group\n- Encouragement to share their achievement\nKeep it warm, professional, under 300 characters.",
+        "text": "=You are issuing a certificate of completion for the RWR Group LMS.\n\nLearner name: {{ $('Check Completion Status').item.json.display_name || $('When Called by Supervisor').item.json.user_name }}\nCourse completed: {{ $('Check Completion Status').item.json.course_title }}\nDate: {{ $json.issued_at_formatted }}\n\nWrite a celebratory certificate announcement message in Slack mrkdwn format.\nInclude:\n- Congratulations header\n- What they achieved\n- The significance of the certification for RWR Group\n- Encouragement to share their achievement\nKeep it warm, professional, under 300 characters.",
         "options": {
           "systemMessage": "You are a congratulatory announcer. Be enthusiastic and genuine."
         }
@@ -155,7 +159,7 @@
               "elements": [
                 {
                   "type": "mrkdwn",
-                  "text": "Certificate for *{{ $('Check Completion Status').item.json.course_title }}* · Issued {{ new Date().toLocaleDateString() }}"
+                  "text": "Certificate for *{{ $('Check Completion Status').item.json.course_title }}* · Issued {{ $('Issue Certificate').item.json.issued_at_formatted }}"
                 }
               ]
             }
@@ -188,7 +192,7 @@
     "Issue Certificate": { "main": [[{ "node": "Gemini Draft Announcement", "type": "main", "index": 0 }]] },
     "Gemini Draft Announcement": { "main": [[{ "node": "Post Certificate to Channel", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "TcY8C8malQ5SiTqZ",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Certification" }]

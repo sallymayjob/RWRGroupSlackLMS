@@ -12,8 +12,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT u.id AS user_id, e.id AS enrolment_id,\n       COALESCE(e.current_module_id, m_first.id) AS current_module_id,\n       m.title AS module_title, m.content AS module_content,\n       m.position AS module_position,\n       c.title AS course_title, c.id AS course_id,\n       (\n         SELECT COUNT(*) FROM modules WHERE course_id = c.id\n       ) AS total_modules,\n       (\n         SELECT COUNT(*) FROM progress p2\n         JOIN modules m2 ON m2.id = p2.module_id\n         WHERE p2.user_id = u.id AND m2.course_id = c.id\n       ) AS completed_modules\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN courses c ON c.id = e.course_id\nLEFT JOIN modules m ON m.id = e.current_module_id\nLEFT JOIN LATERAL (\n  SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n) m_first ON true\nWHERE u.slack_user_id = '{{ $json.user_id }}'\n  AND e.completed_at IS NULL\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
-        "options": {}
+        "query": "SELECT u.id AS user_id, e.id AS enrolment_id,\n       COALESCE(e.current_module_id, m_first.id) AS current_module_id,\n       m.title AS module_title, m.content AS module_content,\n       m.position AS module_position,\n       c.title AS course_title, c.id AS course_id,\n       (\n         SELECT COUNT(*) FROM modules WHERE course_id = c.id\n       ) AS total_modules,\n       (\n         SELECT COUNT(*) FROM progress p2\n         JOIN modules m2 ON m2.id = p2.module_id\n         WHERE p2.user_id = u.id AND m2.course_id = c.id\n       ) AS completed_modules\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN courses c ON c.id = e.course_id\nLEFT JOIN modules m ON m.id = e.current_module_id\nLEFT JOIN LATERAL (\n  SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n) m_first ON true\nWHERE u.slack_user_id = $1\n  AND e.completed_at IS NULL\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id]) }}"
+        }
       },
       "id": "a3000000-0000-0000-0000-000000000002",
       "name": "Get User Enrolment & Module",
@@ -141,7 +143,7 @@
     },
     "Gemini Generate Lesson": { "main": [[{ "node": "Send Lesson to Slack", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "e0yErInDqhfKbNls",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Tutor" }]

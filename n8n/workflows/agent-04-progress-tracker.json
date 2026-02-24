@@ -12,8 +12,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  u.id AS user_id,\n  u.display_name,\n  (\n    SELECT json_agg(json_build_object(\n      'course', c.title,\n      'course_code', c.code,\n      'enrolled_at', e.enrolled_at,\n      'completed_at', e.completed_at,\n      'total_modules', (SELECT COUNT(*) FROM modules WHERE course_id = c.id),\n      'completed_modules', (\n        SELECT COUNT(*) FROM progress p\n        JOIN modules m ON m.id = p.module_id\n        WHERE p.user_id = u.id AND m.course_id = c.id\n      ),\n      'current_module', (SELECT title FROM modules WHERE id = e.current_module_id)\n    ))\n    FROM enrolments e\n    JOIN courses c ON c.id = e.course_id\n    WHERE e.user_id = u.id\n  ) AS enrolments,\n  (\n    SELECT COUNT(*) FROM certificates WHERE user_id = u.id\n  ) AS certificates_earned\nFROM users u\nWHERE u.slack_user_id = '{{ $json.user_id }}';",
-        "options": {}
+        "query": "SELECT\n  u.id AS user_id,\n  u.display_name,\n  COALESCE(\n    (\n      SELECT json_agg(json_build_object(\n        'course', c.title,\n        'course_code', c.code,\n        'enrolled_at', e.enrolled_at,\n        'completed_at', e.completed_at,\n        'total_modules', (SELECT COUNT(*) FROM modules WHERE course_id = c.id),\n        'completed_modules', (\n          SELECT COUNT(*) FROM progress p\n          JOIN modules m ON m.id = p.module_id\n          WHERE p.user_id = u.id AND m.course_id = c.id\n        ),\n        'current_module', (SELECT title FROM modules WHERE id = e.current_module_id)\n      ))\n      FROM enrolments e\n      JOIN courses c ON c.id = e.course_id\n      WHERE e.user_id = u.id\n    ),\n    '[]'::json\n  ) AS enrolments,\n  (\n    SELECT COUNT(*) FROM certificates WHERE user_id = u.id\n  ) AS certificates_earned\nFROM users u\nWHERE u.slack_user_id = $1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id]) }}"
+        }
       },
       "id": "a4000000-0000-0000-0000-000000000002",
       "name": "Get Full Progress",
@@ -131,7 +133,7 @@
     },
     "Gemini Format Progress": { "main": [[{ "node": "Send Progress to Slack", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "z8j0WZhQCfsduOdi",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Progress" }]

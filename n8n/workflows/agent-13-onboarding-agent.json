@@ -12,8 +12,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Upsert the new employee as a user\nINSERT INTO users (slack_user_id, slack_team_id, display_name)\nVALUES (\n  '{{ $json.user_id }}',\n  '{{ $json.team_id }}',\n  '{{ $json.user_name }}'\n)\nON CONFLICT (slack_user_id) DO UPDATE\n  SET display_name = EXCLUDED.display_name,\n      updated_at = NOW()\nRETURNING id, display_name, created_at,\n  (xmax = 0) AS is_new_user;",
-        "options": {}
+        "query": "INSERT INTO users (slack_user_id, slack_team_id, display_name)\nVALUES ($1, $2, $3)\nON CONFLICT (slack_user_id) DO UPDATE\n  SET display_name = EXCLUDED.display_name,\n      updated_at = NOW()\nRETURNING id, display_name, created_at,\n  (created_at = updated_at) AS is_new_user;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id, $json.team_id, $json.user_name]) }}"
+        }
       },
       "id": "ad130000-0000-0000-0000-000000000002",
       "name": "Upsert User",
@@ -25,8 +27,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Get default onboarding courses (courses tagged for auto-enrol)\n-- Convention: courses with code starting with 'OB-' are onboarding courses\nSELECT\n  c.id AS course_id,\n  c.title,\n  c.code,\n  c.description,\n  (\n    SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n  ) AS first_module_id,\n  (\n    SELECT COUNT(*) FROM modules WHERE course_id = c.id\n  ) AS total_modules,\n  (\n    -- Check if already enrolled\n    SELECT id FROM enrolments\n    WHERE user_id = {{ $('Upsert User').item.json.id }}\n      AND course_id = c.id\n  ) AS existing_enrolment_id\nFROM courses c\nWHERE c.code LIKE 'OB-%'\nORDER BY c.code;",
-        "options": {}
+        "query": "SELECT\n  c.id AS course_id,\n  c.title,\n  c.code,\n  c.description,\n  (\n    SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1\n  ) AS first_module_id,\n  (\n    SELECT COUNT(*) FROM modules WHERE course_id = c.id\n  ) AS total_modules,\n  (\n    SELECT id FROM enrolments\n    WHERE user_id = $1\n      AND course_id = c.id\n  ) AS existing_enrolment_id\nFROM courses c\nWHERE c.code LIKE 'OB-%'\nORDER BY c.code;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Upsert User').item.json.id]) }}"
+        }
       },
       "id": "ad130000-0000-0000-0000-000000000003",
       "name": "Get Onboarding Courses",
@@ -38,8 +42,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Enrol in all onboarding courses not yet enrolled\nINSERT INTO enrolments (user_id, course_id, current_module_id)\nSELECT\n  {{ $('Upsert User').item.json.id }},\n  c.id,\n  (SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1)\nFROM courses c\nWHERE c.code LIKE 'OB-%'\n  AND NOT EXISTS (\n    SELECT 1 FROM enrolments e2\n    WHERE e2.user_id = {{ $('Upsert User').item.json.id }}\n      AND e2.course_id = c.id\n  )\nRETURNING course_id;",
-        "options": {}
+        "query": "INSERT INTO enrolments (user_id, course_id, current_module_id)\nSELECT\n  $1,\n  c.id,\n  (SELECT id FROM modules WHERE course_id = c.id ORDER BY position ASC LIMIT 1)\nFROM courses c\nWHERE c.code LIKE 'OB-%'\n  AND NOT EXISTS (\n    SELECT 1 FROM enrolments e2\n    WHERE e2.user_id = $1\n      AND e2.course_id = c.id\n  )\nRETURNING course_id;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Upsert User').item.json.id]) }}"
+        }
       },
       "id": "ad130000-0000-0000-0000-000000000004",
       "name": "Auto-Enrol in OB Courses",
@@ -117,7 +123,7 @@
     "Auto-Enrol in OB Courses": { "main": [[{ "node": "Gemini Welcome Message", "type": "main", "index": 0 }]] },
     "Gemini Welcome Message": { "main": [[{ "node": "Post Welcome to Channel", "type": "main", "index": 0 }]] }
   },
-  "active": false,
+  "active": true,
   "id": "R8adLhGssCewBrKC",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Gemini" }, { "name": "Onboarding" }]

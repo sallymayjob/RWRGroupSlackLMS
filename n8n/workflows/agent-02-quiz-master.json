@@ -12,8 +12,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT u.id AS user_id, e.id AS enrolment_id, e.current_module_id,\n       m.title AS module_title, m.content AS module_content,\n       c.title AS course_title\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN modules m ON m.id = e.current_module_id\nJOIN courses c ON c.id = e.course_id\nWHERE u.slack_user_id = '{{ $json.user_id }}'\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
-        "options": {}
+        "query": "SELECT u.id AS user_id, e.id AS enrolment_id, e.current_module_id,\n       m.title AS module_title, m.content AS module_content,\n       c.title AS course_title\nFROM users u\nJOIN enrolments e ON e.user_id = u.id\nJOIN modules m ON m.id = e.current_module_id\nJOIN courses c ON c.id = e.course_id\nWHERE u.slack_user_id = $1\nORDER BY e.enrolled_at DESC\nLIMIT 1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id]) }}"
+        }
       },
       "id": "a1000000-0000-0000-0000-000000000002",
       "name": "Get Current Module",
@@ -112,8 +114,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO progress (user_id, module_id)\nVALUES (\n  (SELECT id FROM users WHERE slack_user_id = '{{ $json.user_id }}'),\n  {{ $json.current_module_id }}\n)\nON CONFLICT (user_id, module_id) DO NOTHING;\n\nUPDATE enrolments\nSET current_module_id = (\n  SELECT id FROM modules\n  WHERE course_id = (\n    SELECT course_id FROM modules WHERE id = {{ $json.current_module_id }}\n  )\n  AND position > (\n    SELECT position FROM modules WHERE id = {{ $json.current_module_id }}\n  )\n  ORDER BY position ASC\n  LIMIT 1\n)\nWHERE id = {{ $json.enrolment_id }}\nRETURNING current_module_id;",
-        "options": {}
+        "query": "WITH progress_insert AS (\n  INSERT INTO progress (user_id, module_id)\n  VALUES ($1, $2)\n  ON CONFLICT (user_id, module_id) DO NOTHING\n),\nnext_module AS (\n  SELECT id AS next_id FROM modules\n  WHERE course_id = (SELECT course_id FROM modules WHERE id = $2)\n    AND position > (SELECT position FROM modules WHERE id = $2)\n  ORDER BY position ASC\n  LIMIT 1\n)\nUPDATE enrolments\nSET\n  current_module_id = (SELECT next_id FROM next_module),\n  completed_at = CASE\n    WHEN (SELECT next_id FROM next_module) IS NULL THEN NOW()\n    ELSE completed_at\n  END\nWHERE id = $3\nRETURNING current_module_id, completed_at;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Parse Evaluation').item.json.user_id, $('Parse Evaluation').item.json.current_module_id, $('Parse Evaluation').item.json.enrolment_id]) }}"
+        }
       },
       "id": "a1000000-0000-0000-0000-000000000008",
       "name": "Record Progress & Advance",
@@ -121,6 +125,65 @@
       "typeVersion": 2.5,
       "position": [1440, -300],
       "credentials": { "postgres": { "id": "postgres-creds", "name": "LMS Postgres" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 3 },
+          "conditions": [
+            {
+              "id": "check-complete",
+              "leftValue": "={{ $json.completed_at }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000011",
+      "name": "Course Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1680, -300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Parse Evaluation').item.json.response_url }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "response_type": "in_channel",
+          "blocks": [
+            {
+              "type": "header",
+              "text": { "type": "plain_text", "text": "🎓 Course Complete!" }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": ":trophy: *Congratulations, <@{{ $('Parse Evaluation').item.json.user_id }}>!* You've completed every module in *{{ $('Parse Evaluation').item.json.course_title }}*.\n\n{{ $('Parse Evaluation').item.json.feedback }}\n\n*Score on final module:* {{ $('Parse Evaluation').item.json.score }}/100"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "Use `/cert` to claim your certificate of completion!"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000012",
+      "name": "Send Course Complete Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1920, -200]
     },
     {
       "parameters": {
@@ -153,7 +216,7 @@
       "name": "Send Pass Response",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1680, -300]
+      "position": [1920, -400]
     },
     {
       "parameters": {
@@ -199,9 +262,15 @@
         [{ "node": "Send Fail Response", "type": "main", "index": 0 }]
       ]
     },
-    "Record Progress & Advance": { "main": [[{ "node": "Send Pass Response", "type": "main", "index": 0 }]] }
+    "Record Progress & Advance": { "main": [[{ "node": "Course Complete?", "type": "main", "index": 0 }]] },
+    "Course Complete?": {
+      "main": [
+        [{ "node": "Send Course Complete Response", "type": "main", "index": 0 }],
+        [{ "node": "Send Pass Response", "type": "main", "index": 0 }]
+      ]
+    }
   },
-  "active": false,
+  "active": true,
   "id": "wpJOwdjIluP9n6Tu",
   "meta": { "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86" },
   "tags": [{ "name": "LMS" }, { "name": "Quiz" }]
