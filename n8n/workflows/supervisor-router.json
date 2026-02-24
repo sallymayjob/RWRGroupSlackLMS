@@ -504,7 +504,9 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "supervisor",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "id": "937ee444-b27c-4985-b342-b4901c92aacc",
       "name": "Slack Supervisor Webhook",
@@ -515,6 +517,60 @@
         1712
       ],
       "webhookId": "900f3f53-7809-49a2-92f1-13d130c83f4f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// rawBody requires the Webhook node option rawBody: true\nconst raw = $input.first().json;\nconst rawBody = raw.rawBody || '';\nconst headers = raw.headers || {};\n\nconst timestamp = String(headers['x-slack-request-timestamp'] || '');\nconst slackSignature = String(headers['x-slack-signature'] || '');\nconst signingSecret = String($env.SLACK_SIGNING_SECRET || '');\n\n// Replay-attack protection: reject requests older than 5 minutes\nconst fiveMinutesAgo = Math.floor(Date.now() / 1000) - 300;\nif (!timestamp || parseInt(timestamp, 10) < fiveMinutesAgo) {\n  return [{ json: { valid: false, reason: 'timestamp_expired_or_missing', ...raw } }];\n}\n\nif (!signingSecret) {\n  // Fail closed: if secret is not configured, reject all requests\n  return [{ json: { valid: false, reason: 'signing_secret_not_configured', ...raw } }];\n}\n\nconst baseString = `v0:${timestamp}:${rawBody}`;\nconst hmac = crypto.createHmac('sha256', signingSecret).update(baseString).digest('hex');\nconst computed = `v0=${hmac}`;\n\n// Constant-time comparison prevents timing attacks\nlet valid = false;\ntry {\n  const a = Buffer.from(computed, 'utf8');\n  const b = Buffer.from(slackSignature, 'utf8');\n  if (a.length === b.length) {\n    valid = crypto.timingSafeEqual(a, b);\n  }\n} catch (e) {\n  valid = false;\n}\n\nreturn [{ json: { valid, ...raw } }];\n"
+      },
+      "id": "sec00001-0000-0000-0000-000000000001",
+      "name": "Validate Slack Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-3920, 1712]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "sec00001-0000-0000-0000-000000000010",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sec00001-0000-0000-0000-000000000002",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-3760, 1712]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Invalid request signature",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "sec00001-0000-0000-0000-000000000003",
+      "name": "Reject — Invalid Signature",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-3760, 1900]
     }
   ],
   "pinData": {
@@ -643,7 +699,36 @@
       "main": [
         [
           {
+            "node": "Validate Slack Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Slack Signature": {
+      "main": [
+        [
+          {
+            "node": "Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature Valid?": {
+      "main": [
+        [
+          {
             "node": "Parse Slack Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject — Invalid Signature",
             "type": "main",
             "index": 0
           }
