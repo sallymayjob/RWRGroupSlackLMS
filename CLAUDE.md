@@ -8,7 +8,7 @@ This file provides context and conventions for AI assistants (e.g., Claude Code)
 
 **RWRGroupSlackLMS** is a Learning Management System (LMS) integrated with Slack for the RWR Group organization. The project enables training delivery, progress tracking, and learning workflows surfaced directly through the Slack platform.
 
-> **Status:** Early initialization stage. No source code has been committed yet. This file establishes conventions to follow as the project is built out.
+> **Status:** Active development. Core scaffolding is in place: Node.js 20, Slack Bolt (HTTP mode), PostgreSQL, Redis, and n8n AI agent integration.
 
 ---
 
@@ -16,20 +16,26 @@ This file provides context and conventions for AI assistants (e.g., Claude Code)
 
 ```
 RWRGroupSlackLMS/
-├── CLAUDE.md          # This file — AI assistant guidance
-├── SECURITY.md        # Security policy
-└── .gitkeep           # Placeholder (remove once real files are added)
-```
-
-As the project grows, the expected structure is:
-
-```
-RWRGroupSlackLMS/
-├── src/               # Application source code
-├── tests/             # Unit and integration tests
-├── docs/              # Project documentation
-├── .env.example       # Environment variable template (never commit .env)
-├── package.json       # Node.js dependencies and scripts (if Node-based)
+├── src/
+│   ├── index.js              # Entry point — Bolt HTTP app, startup validation, graceful shutdown
+│   ├── db.js                 # PostgreSQL pool wrapper
+│   ├── cache.js              # Redis client wrapper
+│   ├── handlers/
+│   │   ├── commands.js       # All 8 slash commands → n8n
+│   │   ├── events.js         # app_mention, message.im → n8n
+│   │   └── interactions.js   # Block Kit actions & modal submissions → n8n
+│   └── services/
+│       └── n8n.js            # Forwards payloads to n8n workflows (timeout + retry)
+├── tests/                    # Jest unit tests mirroring src/
+├── db/
+│   └── schema.sql            # Initial database schema
+├── .env.example              # Required environment variable template
+├── .eslintrc.js              # ESLint config
+├── .prettierrc               # Prettier config
+├── jest.config.js            # Jest config
+├── Dockerfile                # Node 20 Alpine, non-root user, health check
+├── docker-compose.yml        # App + Postgres 16 + Redis 7
+├── slack_manifest.json       # Slack app manifest (source of truth)
 ├── CLAUDE.md
 ├── SECURITY.md
 └── README.md
@@ -65,21 +71,22 @@ Always develop on a feature branch and open a pull request to `master`.
 
 Environment variables **must never be committed** to the repository. Use a `.env` file locally and maintain a `.env.example` template with placeholder values.
 
-Expected variables (to be filled in as the project is defined):
+See `.env.example` for the full list. Required at startup (app exits with a clear error if missing):
 
 ```env
-# Slack Integration
-SLACK_BOT_TOKEN=
-SLACK_SIGNING_SECRET=
-SLACK_APP_TOKEN=
+SLACK_BOT_TOKEN=        # xoxb-...
+SLACK_SIGNING_SECRET=   # from Slack app settings
 
-# Application
-NODE_ENV=development
-PORT=3000
+# n8n AI backend
+N8N_BASE_URL=           # https://n8n.srv1371300.hstgr.cloud
+N8N_WEBHOOK_SECRET=     # optional shared secret
 
-# Database (if applicable)
-DATABASE_URL=
+# Database & cache
+DATABASE_URL=           # postgresql://user:pass@host:5432/db
+REDIS_URL=              # redis://host:6379
 ```
+
+`SLACK_APP_TOKEN` is **not** needed — socket mode is disabled.
 
 ---
 
@@ -143,8 +150,11 @@ This section will be updated once the project scaffolding is in place. For now:
 
 ## Notes for AI Assistants
 
-- This repository is **in early stage** — no framework or language has been locked in yet. Check for `package.json`, `requirements.txt`, or similar files to determine the stack before making assumptions.
-- When adding new features, always check existing files for patterns to follow before introducing new conventions.
+- **Stack is locked:** Node.js 20, Slack Bolt v3 (HTTP mode), PostgreSQL 16, Redis 7, n8n for AI workflows.
+- All Slack events and commands are forwarded to n8n via `src/services/n8n.js` — do not add business logic here; put it in n8n workflows.
+- Slash commands must call `ack()` first; event handlers (`app.event`) do NOT have `ack()`.
+- `src/index.js` validates required env vars at startup — add new required vars to the `REQUIRED_ENV` array there.
+- Database schema lives in `db/schema.sql`. Add new tables there and keep it idempotent (`IF NOT EXISTS`).
 - Do not commit `.env` files, credentials, or secrets.
 - When in doubt about project direction, surface questions rather than making large architectural decisions autonomously.
 - Update this file when significant architectural decisions are made or the project structure changes materially.

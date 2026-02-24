@@ -3,10 +3,10 @@
  *
  * Handles:
  *   - app_mention  — when the bot is @mentioned in a channel
- *   - message.im   — direct messages sent to the bot
+ *   - message      — DMs sent to the bot (channel_type === "im")
  *
- * Both event types are forwarded to the n8n supervisor workflow so the AI
- * agent can respond conversationally.
+ * NOTE: Bolt event handlers do NOT receive ack() — only slash commands do.
+ * Both events are forwarded to the n8n supervisor workflow.
  *
  * @param {import('@slack/bolt').App} app
  */
@@ -14,16 +14,21 @@ const { forwardToN8n } = require("../services/n8n");
 
 module.exports = function registerEvents(app) {
   // @mention in any channel
-  app.event("app_mention", async ({ event, ack }) => {
-    if (ack) await ack();
-    await forwardToN8n("supervisor", { type: "app_mention", ...event });
+  app.event("app_mention", async ({ event }) => {
+    try {
+      await forwardToN8n("supervisor", { type: "app_mention", ...event });
+    } catch (err) {
+      console.error("app_mention forward failed:", err.message);
+    }
   });
 
-  // Direct messages to the bot
-  app.event("message", async ({ event, ack }) => {
-    if (ack) await ack();
-    // Only handle DMs (channel_type === "im"), ignore bot messages
-    if (event.channel_type !== "im" || event.bot_id) return;
-    await forwardToN8n("supervisor", { type: "message.im", ...event });
+  // Direct messages to the bot — filter out bot messages and non-DMs
+  app.event("message", async ({ event }) => {
+    if (event.channel_type !== "im" || event.bot_id || event.subtype) return;
+    try {
+      await forwardToN8n("supervisor", { type: "message.im", ...event });
+    } catch (err) {
+      console.error("message.im forward failed:", err.message);
+    }
   });
 };

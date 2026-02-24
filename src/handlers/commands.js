@@ -1,60 +1,45 @@
 /**
  * Register Slack slash command listeners.
  *
- * All commands proxy payloads to the n8n supervisor workflow and return an
- * immediate ack() so Slack's 3-second window is always met. n8n sends the
- * actual response back via response_url.
+ * ack() is called immediately so Slack's 3-second window is always met.
+ * The payload is then forwarded to the appropriate n8n workflow; n8n
+ * sends the actual response back via response_url.
  *
  * @param {import('@slack/bolt').App} app
  */
 const { forwardToN8n } = require("../services/n8n");
 
+/** Commands that route to the supervisor workflow */
+const SUPERVISOR_COMMANDS = [
+  "/learn",
+  "/submit",
+  "/progress",
+  "/enroll",
+  "/cert",
+  "/report",
+  "/gaps",
+];
+
 module.exports = function registerCommands(app) {
-  // /learn — resume the learner's next lesson
-  app.command("/learn", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
+  // All supervisor commands share the same handling
+  for (const cmd of SUPERVISOR_COMMANDS) {
+    app.command(cmd, async ({ command, ack }) => {
+      await ack();
+      try {
+        await forwardToN8n("supervisor", command);
+      } catch (err) {
+        console.error(`${cmd} forward to supervisor failed:`, err.message);
+      }
+    });
+  }
 
-  // /submit — complete mission for the current module
-  app.command("/submit", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /progress — view learning progress
-  app.command("/progress", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /enroll <course_id> — enroll in a course
-  app.command("/enroll", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /cert — issue a certificate
-  app.command("/cert", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /report — view LMS analytics dashboard
-  app.command("/report", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /gaps — show stuck learners & hard modules
-  app.command("/gaps", async ({ command, ack }) => {
-    await ack();
-    await forwardToN8n("supervisor", command);
-  });
-
-  // /onboard — onboard new employees
+  // /onboard routes to its own n8n workflow
   app.command("/onboard", async ({ command, ack }) => {
     await ack();
-    await forwardToN8n("onboard", command);
+    try {
+      await forwardToN8n("onboard", command);
+    } catch (err) {
+      console.error("/onboard forward to onboard workflow failed:", err.message);
+    }
   });
 };
