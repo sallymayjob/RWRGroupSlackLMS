@@ -42,4 +42,14 @@ module.exports = function registerCommands(app) {
       console.error("/onboard forward to onboard workflow failed:", err.message);
     }
   });
+
+  // /backup triggers the Google Sheets backup workflow; also runs on a nightly schedule
+  app.command("/backup", async ({ command, ack }) => {
+    await ack();
+    try {
+      await forwardToN8n("backup", command);
+    } catch (err) {
+      console.error("/backup forward to backup workflow failed:", err.message);
+    }
+  });
 };

@@ -152,18 +152,21 @@ This section will be updated once the project scaffolding is in place. For now:
 
 All business logic lives in n8n. The supervisor router (`n8n/workflows/supervisor-router.json`) receives every Slack payload and dispatches to the correct agent workflow:
 
-| Command | Agent | n8n Workflow ID |
-|---------|-------|----------------|
-| `/learn [lesson#]` | Agent 03 — Tutor | `e0yErInDqhfKbNls` |
-| `/submit` | Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` |
-| `/progress` | Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` |
-| `/enroll` | Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` |
-| `/cert` | Agent 07 — Certification | `TcY8C8malQ5SiTqZ` |
-| `/report` | Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` |
-| `/gaps` | Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` |
-| `/onboard` | Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` |
+| Command | Agent | n8n Workflow ID | Route |
+|---------|-------|----------------|-------|
+| `/learn [lesson#]` | Agent 03 — Tutor | `e0yErInDqhfKbNls` | supervisor |
+| `/submit` | Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` | supervisor |
+| `/progress` | Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` | supervisor |
+| `/enroll` | Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` | supervisor |
+| `/cert` | Agent 07 — Certification | `TcY8C8malQ5SiTqZ` | supervisor |
+| `/report` | Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` | supervisor |
+| `/gaps` | Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` | supervisor |
+| `/onboard` | Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` | onboard |
+| `/backup` | Agent 14 — Google Sheets Backup | `BackupToGSheets01` | backup |
 
 The supervisor also extracts a `lesson` integer from `/learn <N>` text before dispatching.
+
+Agent 14 (`/backup`) routes directly to the `backup` webhook — it bypasses the supervisor. It also has an independent nightly Schedule trigger (2am UTC). Required env vars: `GOOGLE_SHEETS_BACKUP_ID`, `SLACK_ADMIN_WEBHOOK_URL` (see `.env.example`). Credentials to configure in n8n: `LMS Postgres` (Postgres) and `Google Sheets (LMS Backup)` (Google Sheets OAuth2).
 
 n8n workflow exports live in `n8n/workflows/`. Import them via **n8n → Workflows → Import from file**.
 

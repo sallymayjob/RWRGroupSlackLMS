@@ -9,9 +9,12 @@ const ALL_COMMANDS = [
   "/report",
   "/gaps",
   "/onboard",
+  "/backup",
 ];
 
-const SUPERVISOR_COMMANDS = ALL_COMMANDS.filter((c) => c !== "/onboard");
+const SUPERVISOR_COMMANDS = ALL_COMMANDS.filter(
+  (c) => c !== "/onboard" && c !== "/backup"
+);
 
 describe("commands handler", () => {
   let registered;
@@ -24,7 +27,7 @@ describe("commands handler", () => {
     require("../../src/handlers/commands")(fakeApp);
   });
 
-  it("registers all 8 slash commands", () => {
+  it("registers all 9 slash commands", () => {
     expect(registered).toHaveLength(ALL_COMMANDS.length);
     ALL_COMMANDS.forEach((cmd) => expect(registered).toContain(cmd));
   });
@@ -64,6 +67,22 @@ describe("commands handler — behavior", () => {
     await handlers["/onboard"]({ command, ack });
     expect(ack).toHaveBeenCalledTimes(1);
     expect(mockForward).toHaveBeenCalledWith("onboard", command);
+  });
+
+  it("/backup calls ack() then forwards to the backup workflow", async () => {
+    const ack = jest.fn().mockResolvedValue(undefined);
+    const command = { command: "/backup", text: "", user_id: "U123" };
+    await handlers["/backup"]({ command, ack });
+    expect(ack).toHaveBeenCalledTimes(1);
+    expect(mockForward).toHaveBeenCalledWith("backup", command);
+  });
+
+  it("/backup swallows forwardToN8n errors", async () => {
+    mockForward.mockRejectedValue(new Error("n8n unreachable"));
+    const ack = jest.fn().mockResolvedValue(undefined);
+    await expect(
+      handlers["/backup"]({ command: { command: "/backup", text: "" }, ack })
+    ).resolves.toBeUndefined();
   });
 
   it("swallows forwardToN8n errors — does not propagate to Bolt", async () => {

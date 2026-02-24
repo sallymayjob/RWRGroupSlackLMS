@@ -70,6 +70,17 @@ describe("n8n service — regression", () => {
 
   // ── Routing ───────────────────────────────────────────────────────────────
 
+  it("POSTs to /webhook/backup", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("backup", { command: "/backup" });
+    await jest.runAllTimersAsync();
+    await p;
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/backup",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
   it("POSTs to /webhook/slack-interactions", async () => {
     const { forwardToN8n } = require("../../src/services/n8n");
     const p = forwardToN8n("slack-interactions", { type: "action" });
