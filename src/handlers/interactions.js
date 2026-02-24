@@ -11,12 +11,20 @@ module.exports = function registerInteractions(app) {
   // Block Kit button actions
   app.action(/.*/, async ({ action, body, ack }) => {
     await ack();
-    await forwardToN8n("slack-interactions", { type: "action", action, body });
+    try {
+      await forwardToN8n("slack-interactions", { type: "action", action, body });
+    } catch (err) {
+      console.error("action forward to slack-interactions failed:", err.message);
+    }
   });
 
   // Modal submissions
   app.view(/.*/, async ({ view, body, ack }) => {
     await ack();
-    await forwardToN8n("slack-interactions", { type: "view_submission", view, body });
+    try {
+      await forwardToN8n("slack-interactions", { type: "view_submission", view, body });
+    } catch (err) {
+      console.error("view_submission forward to slack-interactions failed:", err.message);
+    }
   });
 };

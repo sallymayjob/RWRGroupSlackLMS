@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 // ── Startup environment validation ───────────────────────────────────────────
-const REQUIRED_ENV = ["SLACK_BOT_TOKEN", "SLACK_SIGNING_SECRET"];
+const REQUIRED_ENV = ["SLACK_BOT_TOKEN", "SLACK_SIGNING_SECRET", "DATABASE_URL", "REDIS_URL"];
 const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
 if (missing.length > 0) {
   console.error(`Missing required environment variables: ${missing.join(", ")}`);
@@ -51,6 +51,8 @@ async function shutdown(signal) {
   console.log(`Received ${signal} — shutting down gracefully`);
   try {
     await app.stop();
+    await db.disconnect();
+    await cache.disconnect();
   } catch (err) {
     console.error("Error during shutdown:", err.message);
   }

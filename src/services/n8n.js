@@ -19,6 +19,9 @@
  *   onboard     → POST /webhook/onboard
  *                   /onboard  → Agent 13 — Onboarding     (R8adLhGssCewBrKC)
  *
+ *   backup      → POST /webhook/backup
+ *                   /backup   → Agent 14 — Google Sheets Backup (BackupToGSheets01)
+ *
  *   slack-interactions → POST /webhook/slack-interactions
  *                   Block Kit button actions and modal submissions
  *
@@ -53,7 +56,7 @@ function sleep(ms) {
 
 /**
  * Forward a payload to an n8n workflow with timeout and retry.
- * @param {"supervisor"|"onboard"|"slack-interactions"|"slack-events"} workflow
+ * @param {"supervisor"|"onboard"|"backup"|"slack-interactions"|"slack-events"} workflow
  * @param {object} payload
  */
 async function forwardToN8n(workflow, payload) {

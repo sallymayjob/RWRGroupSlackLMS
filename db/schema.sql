@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS modules (
   position    INT           NOT NULL DEFAULT 0,  -- order within the course
   title       VARCHAR(255)  NOT NULL,
   content     TEXT,
-  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  UNIQUE (course_id, position)
 );
 
 -- ── Enrolments ────────────────────────────────────────────────────────────────

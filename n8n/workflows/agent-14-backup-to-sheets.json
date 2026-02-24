@@ -107,6 +107,33 @@
     },
     {
       "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEETS_BACKUP_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Progress",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "bkp-clear-0001",
+      "name": "Clear Progress Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [880, 150],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets (LMS Backup)"
+        }
+      }
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -130,7 +157,7 @@
       "name": "Write Progress → Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [880, 150],
+      "position": [1100, 150],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
@@ -148,11 +175,38 @@
       "name": "Query Enrollments",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1100, 150],
+      "position": [1320, 150],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_POSTGRES_CREDENTIAL_ID",
           "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEETS_BACKUP_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Enrollments",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "bkp-clear-0002",
+      "name": "Clear Enrollments Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1540, 150],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets (LMS Backup)"
         }
       }
     },
@@ -181,7 +235,7 @@
       "name": "Write Enrollments → Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1320, 150],
+      "position": [1760, 150],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
@@ -199,11 +253,38 @@
       "name": "Query Certificates",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1540, 150],
+      "position": [1980, 150],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_POSTGRES_CREDENTIAL_ID",
           "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEETS_BACKUP_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Certificates",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "bkp-clear-0003",
+      "name": "Clear Certificates Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2200, 150],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets (LMS Backup)"
         }
       }
     },
@@ -232,7 +313,7 @@
       "name": "Write Certificates → Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1760, 150],
+      "position": [2420, 150],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
@@ -250,7 +331,7 @@
       "name": "Query DB Snapshot",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1980, 150],
+      "position": [2640, 150],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_POSTGRES_CREDENTIAL_ID",
@@ -283,7 +364,7 @@
       "name": "Write Snapshot → Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [2200, 150],
+      "position": [2860, 150],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
@@ -299,7 +380,7 @@
       "name": "Build Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2420, 150]
+      "position": [3080, 150]
     },
     {
       "parameters": {
@@ -324,7 +405,7 @@
       "name": "Notify Slack — Backup Complete",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2640, 150]
+      "position": [3300, 150]
     }
   ],
   "connections": {
@@ -362,6 +443,13 @@
     "Query Progress": {
       "main": [
         [
+          { "node": "Clear Progress Sheet", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Clear Progress Sheet": {
+      "main": [
+        [
           { "node": "Write Progress → Sheets", "type": "main", "index": 0 }
         ]
       ]
@@ -376,6 +464,13 @@
     "Query Enrollments": {
       "main": [
         [
+          { "node": "Clear Enrollments Sheet", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Clear Enrollments Sheet": {
+      "main": [
+        [
           { "node": "Write Enrollments → Sheets", "type": "main", "index": 0 }
         ]
       ]
@@ -388,6 +483,13 @@
       ]
     },
     "Query Certificates": {
+      "main": [
+        [
+          { "node": "Clear Certificates Sheet", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Clear Certificates Sheet": {
       "main": [
         [
           { "node": "Write Certificates → Sheets", "type": "main", "index": 0 }
@@ -429,7 +531,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "bkp-v1-00000000-0000-0000-0000-000000000001",
+  "versionId": "bkp-v1-00000000-0000-0000-0000-000000000002",
   "meta": {
     "templateCredsSetupCompleted": false,
     "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86"

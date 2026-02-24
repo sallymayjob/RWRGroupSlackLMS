@@ -19,4 +19,8 @@ async function query(text, params) {
   return pool.query(text, params);
 }
 
-module.exports = { connect, query, pool };
+async function disconnect() {
+  await pool.end();
+}
+
+module.exports = { connect, query, pool, disconnect };

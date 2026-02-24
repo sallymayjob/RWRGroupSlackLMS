@@ -33,4 +33,10 @@ async function del(key) {
   return client.del(key);
 }
 
-module.exports = { connect, get, set, del };
+async function disconnect() {
+  if (client && client.isOpen) {
+    await client.quit();
+  }
+}
+
+module.exports = { connect, get, set, del, disconnect };
