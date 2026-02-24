@@ -5,9 +5,12 @@ const ALL_COMMANDS = [
   "/submit",
   "/progress",
   "/enroll",
+  "/unenroll",
   "/cert",
   "/report",
   "/gaps",
+  "/courses",
+  "/help",
   "/onboard",
   "/backup",
 ];
@@ -27,7 +30,7 @@ describe("commands handler", () => {
     require("../../src/handlers/commands")(fakeApp);
   });
 
-  it("registers all 9 slash commands", () => {
+  it("registers all 12 slash commands", () => {
     expect(registered).toHaveLength(ALL_COMMANDS.length);
     ALL_COMMANDS.forEach((cmd) => expect(registered).toContain(cmd));
   });
