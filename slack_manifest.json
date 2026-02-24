@@ -1,0 +1,108 @@
+{
+    "display_information": {
+        "name": "Agentic LMS",
+        "description": "Conversational AI Learning Management System powered by AI agents",
+        "background_color": "#2F855A"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Agentic LMS",
+            "always_online": true
+        },
+        "slash_commands": [
+            {
+                "command": "/learn",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "Continue your next lesson",
+                "usage_hint": "Resume learning",
+                "should_escape": false
+            },
+            {
+                "command": "/submit",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "Complete your mission for the current module",
+                "usage_hint": "Complete you mission",
+                "should_escape": false
+            },
+            {
+                "command": "/progress",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "View your learning progress",
+                "usage_hint": "Show my stats",
+                "should_escape": false
+            },
+            {
+                "command": "/enroll",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "Enroll in a course",
+                "usage_hint": "Enter course ID",
+                "should_escape": true
+            },
+            {
+                "command": "/cert",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "Get your certificate",
+                "usage_hint": "Issue certificate",
+                "should_escape": false
+            },
+            {
+                "command": "/report",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "View LMS analytics dashboard",
+                "usage_hint": "Show dashboard",
+                "should_escape": false
+            },
+            {
+                "command": "/gaps",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/supervisor",
+                "description": "View stuck learners & hard modules",
+                "usage_hint": "Show learning gaps",
+                "should_escape": false
+            },
+            {
+                "command": "/onboard",
+                "url": "https://n8n.srv1371300.hstgr.cloud/webhook/onboard",
+                "description": "Onboard new Employees",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "scopes": {
+            "user": [
+                "users.profile:read",
+                "users:read",
+                "users:read.email",
+                "users.profile:write"
+            ],
+            "bot": [
+                "app_mentions:read",
+                "channels:history",
+                "channels:read",
+                "chat:write",
+                "commands",
+                "im:history",
+                "im:write",
+                "users:read",
+                "users:read.email",
+                "users.profile:read"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "https://n8n.srv1371300.hstgr.cloud/webhook/slack/events",
+            "bot_events": [
+                "app_mention",
+                "message.im"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://n8n.srv1371300.hstgr.cloud/webhook/slack-interactions"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
