@@ -4,6 +4,27 @@
  * Sends Slack payloads to the appropriate n8n webhook so the AI agents
  * can process them and respond via response_url or the Slack Web API.
  *
+ * Routing (see n8n/workflows/supervisor-router.json for the full workflow):
+ *
+ *   supervisor  → POST /webhook/supervisor
+ *                 Switch node dispatches by command to individual agents:
+ *                   /learn    → Agent 03 — Tutor          (e0yErInDqhfKbMls)
+ *                   /submit   → Agent 02 — Quiz Master    (wpJOwdjIluP9n6Tu)
+ *                   /progress → Agent 04 — Progress       (z8j0WZhQCfsduOdi)
+ *                   /enroll   → Agent 08 — Enrollment Mgr (BjxEx4DjqMwlkrU4)
+ *                   /cert     → Agent 07 — Certification  (TcY8C8malQ5SiTqZ)
+ *                   /report   → Agent 12 — Reporting      (HpgyOs9wKZz2mAQd)
+ *                   /gaps     → Agent 09 — Gap Analyst     (g5ZY673tbmDswpl4)
+ *
+ *   onboard     → POST /webhook/onboard
+ *                   /onboard  → Agent 13 — Onboarding     (R8adLhGssCewBrKC)
+ *
+ *   slack-interactions → POST /webhook/slack-interactions
+ *                   Block Kit button actions and modal submissions
+ *
+ *   slack-events → POST /webhook/slack/events
+ *                   app_mention and message.im events
+ *
  * Config (via .env):
  *   N8N_BASE_URL        — e.g. https://n8n.srv1371300.hstgr.cloud
  *   N8N_WEBHOOK_SECRET  — shared secret sent as X-Webhook-Secret header

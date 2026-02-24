@@ -148,13 +148,35 @@ This section will be updated once the project scaffolding is in place. For now:
 
 ---
 
+## n8n Agent Map
+
+All business logic lives in n8n. The supervisor router (`n8n/workflows/supervisor-router.json`) receives every Slack payload and dispatches to the correct agent workflow:
+
+| Command | Agent | n8n Workflow ID |
+|---------|-------|----------------|
+| `/learn [lesson#]` | Agent 03 — Tutor | `e0yErInDqhfKbNls` |
+| `/submit` | Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` |
+| `/progress` | Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` |
+| `/enroll` | Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` |
+| `/cert` | Agent 07 — Certification | `TcY8C8malQ5SiTqZ` |
+| `/report` | Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` |
+| `/gaps` | Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` |
+| `/onboard` | Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` |
+
+The supervisor also extracts a `lesson` integer from `/learn <N>` text before dispatching.
+
+n8n workflow exports live in `n8n/workflows/`. Import them via **n8n → Workflows → Import from file**.
+
+---
+
 ## Notes for AI Assistants
 
-- **Stack is locked:** Node.js 20, Slack Bolt v3 (HTTP mode), PostgreSQL 16, Redis 7, n8n for AI workflows.
+- **Stack is locked:** Node.js 20, Slack Bolt v3 (HTTP mode), PostgreSQL 16, Redis 7, n8n (Gemini agents).
 - All Slack events and commands are forwarded to n8n via `src/services/n8n.js` — do not add business logic here; put it in n8n workflows.
 - Slash commands must call `ack()` first; event handlers (`app.event`) do NOT have `ack()`.
 - `src/index.js` validates required env vars at startup — add new required vars to the `REQUIRED_ENV` array there.
 - Database schema lives in `db/schema.sql`. Add new tables there and keep it idempotent (`IF NOT EXISTS`).
+- When adding a new n8n workflow, export it as JSON and place it in `n8n/workflows/` so it is version-controlled.
 - Do not commit `.env` files, credentials, or secrets.
 - When in doubt about project direction, surface questions rather than making large architectural decisions autonomously.
 - Update this file when significant architectural decisions are made or the project structure changes materially.

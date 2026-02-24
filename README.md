@@ -9,29 +9,59 @@ Slack user
     │  slash command / DM / @mention
     ▼
 Slack API ──► This app (Bolt HTTP, port 3000)
-                  │  signature verified
-                  │  ack() sent immediately (< 3s)
+                  │  signature verified · ack() sent immediately (< 3s)
                   ▼
-              n8n AI workflows
-                  │  supervisor / onboard / interactions
-                  ▼
-              Response via response_url or Slack Web API
+          n8n Supervisor Router  (POST /webhook/supervisor)
+                  │
+                  ├─ Parse Slack Payload (Code node)
+                  ├─ Edit Fields  — normalises fields, extracts `lesson` number
+                  │
+                  └─ Switch on command
+                        /onboard  ──► Agent 13 — Onboarding Agent (Gemini)
+                        /enroll   ──► Agent 08 — Enrollment Manager
+                        /progress ──► Agent 04 — Progress Tracker
+                        /learn    ──► Agent 03 — Tutor
+                        /submit   ──► Agent 02 — Quiz Master
+                        /cert     ──► Agent 07 — Certification
+                        /report   ──► Agent 12 — Reporting Agent (Gemini)
+                        /gaps     ──► Agent 09 — Gap Analyst (Gemini)
+                                            │
+                                            ▼
+                                 Response via response_url
+                                 or Slack Web API
 ```
 
-**Stack:** Node.js 20 · Slack Bolt · PostgreSQL 16 · Redis 7 · n8n
+**Stack:** Node.js 20 · Slack Bolt · PostgreSQL 16 · Redis 7 · n8n · Gemini
+
+## Agent Registry
+
+| Agent | n8n Workflow ID | Triggered by |
+|-------|----------------|--------------|
+| Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` | `/submit` |
+| Agent 03 — Tutor | `e0yErInDqhfKbNls` | `/learn` |
+| Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` | `/progress` |
+| Agent 07 — Certification | `TcY8C8malQ5SiTqZ` | `/cert` |
+| Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` | `/enroll` |
+| Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` | `/gaps` |
+| Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` | `/report` |
+| Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` | `/onboard` |
+
+> n8n workflow source files are in `n8n/workflows/`. Import them via **n8n → Workflows → Import from file**.
 
 ## Slash Commands
 
-| Command | Description |
-|---------|-------------|
-| `/learn` | Resume your next lesson |
-| `/submit` | Complete the mission for the current module |
-| `/progress` | View your learning progress |
-| `/enroll <course-code>` | Enrol in a course |
-| `/cert` | Issue your certificate |
-| `/report` | LMS analytics dashboard (admins) |
-| `/gaps` | View stuck learners & hard modules (admins) |
-| `/onboard` | Onboard a new employee |
+| Command | Agent | Description |
+|---------|-------|-------------|
+| `/learn [lesson#]` | Tutor (03) | Resume (or jump to) a lesson |
+| `/submit` | Quiz Master (02) | Complete the mission for the current module |
+| `/progress` | Progress Tracker (04) | View your learning progress |
+| `/enroll <course-code>` | Enrollment Manager (08) | Enrol in a course |
+| `/cert` | Certification (07) | Issue your certificate |
+| `/report` | Reporting Agent (12) | LMS analytics dashboard (admins) |
+| `/gaps` | Gap Analyst (09) | View stuck learners & hard modules (admins) |
+| `/onboard` | Onboarding Agent (13) | Onboard a new employee |
+
+> **Note:** `/learn` accepts an optional lesson number — e.g. `/learn 3` jumps directly to lesson 3. The n8n supervisor extracts this as the `lesson` field.
 
 ## Getting Started
 
