@@ -1,0 +1,83 @@
+{
+  "seed": 42,
+  "runs": [
+    {
+      "users": 5,
+      "workers": 5,
+      "requests": 192,
+      "success_rate": 0.9062,
+      "avg_ms": 307.63,
+      "p95_ms": 395.74,
+      "p99_ms": 422.08,
+      "validation_failures": 7,
+      "notion_failures": 2,
+      "lm_failures": 4,
+      "sheets_failures": 5
+    },
+    {
+      "users": 10,
+      "workers": 10,
+      "requests": 384,
+      "success_rate": 0.8984,
+      "avg_ms": 306.43,
+      "p95_ms": 397.5,
+      "p99_ms": 422.51,
+      "validation_failures": 19,
+      "notion_failures": 2,
+      "lm_failures": 10,
+      "sheets_failures": 10
+    },
+    {
+      "users": 25,
+      "workers": 25,
+      "requests": 960,
+      "success_rate": 0.9021,
+      "avg_ms": 310.05,
+      "p95_ms": 396.58,
+      "p99_ms": 426.79,
+      "validation_failures": 45,
+      "notion_failures": 10,
+      "lm_failures": 15,
+      "sheets_failures": 24
+    },
+    {
+      "users": 50,
+      "workers": 50,
+      "requests": 1920,
+      "success_rate": 0.9214,
+      "avg_ms": 307.87,
+      "p95_ms": 401.83,
+      "p99_ms": 425.04,
+      "validation_failures": 73,
+      "notion_failures": 23,
+      "lm_failures": 22,
+      "sheets_failures": 40
+    },
+    {
+      "users": 75,
+      "workers": 75,
+      "requests": 2880,
+      "success_rate": 0.9229,
+      "avg_ms": 308.06,
+      "p95_ms": 399.44,
+      "p99_ms": 424.98,
+      "validation_failures": 106,
+      "notion_failures": 30,
+      "lm_failures": 42,
+      "sheets_failures": 52
+    },
+    {
+      "users": 100,
+      "workers": 100,
+      "requests": 3840,
+      "success_rate": 0.9104,
+      "avg_ms": 309.0,
+      "p95_ms": 398.55,
+      "p99_ms": 425.52,
+      "validation_failures": 161,
+      "notion_failures": 32,
+      "lm_failures": 73,
+      "sheets_failures": 95
+    }
+  ]
+}

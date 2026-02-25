@@ -1,0 +1,25 @@
+database,property,type,required,description,example
+Courses,Course ID,title,yes,Primary identifier for course records,course-onboarding-101
+Courses,Course Name,rich_text,yes,Human-readable course title,New Hire Onboarding
+Courses,Status,status,yes,Course lifecycle status,Active
+Courses,Months,relation,yes,Relation to Months database,Month 1
+Months,Month ID,title,yes,Primary identifier for month records,M01
+Months,Month Number,number,yes,Program month index (1-12),1
+Months,Theme,rich_text,yes,Monthly focus theme,Prompt Foundations
+Months,Course,relation,yes,Parent course relation,New Hire Onboarding
+Months,Lessons,relation,yes,Relation to Lessons records,M01-W01-L01
+Lessons,LessonID,title,yes,Unique lesson code used by /submit and routing,M01-W01-L01
+Lessons,Month,number,yes,Month index for lesson (1-12),1
+Lessons,Week,number,yes,Week index for lesson (1-4),1
+Lessons,Day,number,yes,Day index in lesson cycle,1
+Lessons,Hook,rich_text,yes,ULC section 1 (2 sentences max),Curiosity challenge framing for the lesson.
+Lessons,Core Content,rich_text,yes,ULC section 2 (max 300 words),Practitioner-level lesson body.
+Lessons,Insight,rich_text,yes,ULC section 3 (1 sentence, max 50 words),Single key insight for applied learning.
+Lessons,Takeaway,rich_text,yes,ULC section 4 (1 sentence, max 15 words),Short actionable takeaway.
+Lessons,Mission,rich_text,yes,ULC section 5 (verb-first, under 5 minutes),Complete one practical task.
+Lessons,Verification,rich_text,yes,ULC section 6 (1 question, mission-gated),What output confirms mission completion?
+Lessons,Submit Command,rich_text,yes,ULC section 7 submit block (`/submit` + reaction alt),/submit M01-W01-L01
+Lessons,Slack Thread Text,rich_text,no,Slack-ready delivery payload for lesson thread,"Lesson M01-W01-L01 is live. Use /submit M01-W01-L01"
+Lessons,SOP-5 Validated,checkbox,yes,Compliance marker from QA workflow,true
+Lessons,QA Score,number,no,Quality score from review process,94
+Lessons,Status,status,yes,Lesson lifecycle status,Ready

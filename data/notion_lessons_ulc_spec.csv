@@ -1,0 +1,8 @@
+ulc_step,field_name,constraint,notes
+1,Hook,"2 sentences, curiosity/challenge framing",Lead-in that increases engagement
+2,Core Content,"<= 300 words, practitioner-level",Primary instructional block
+3,Insight,"1 sentence, <= 50 words",Single distilled learning insight
+4,Takeaway,"1 sentence, <= 15 words",Quick retention prompt
+5,Mission,"Verb-first, <= 5 minutes, existing tools",Action task for learners
+6,Verification,"1 question, requires mission completion",Must confirm actionable completion
+7,Submit Block,"/submit <lesson_code> + reaction alternative",Required for progress tracking agent
