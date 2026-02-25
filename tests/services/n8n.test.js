@@ -45,6 +45,38 @@ describe("n8n service", () => {
       "Unknown n8n workflow: unknown-workflow"
     );
   });
+
+  it("normalises trailing slash in N8N_BASE_URL", async () => {
+    process.env.N8N_BASE_URL = "https://example.com/";
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("supervisor", { command: "/learn" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/supervisor",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("preserves path prefixes in N8N_BASE_URL", async () => {
+    process.env.N8N_BASE_URL = "https://example.com/n8n";
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("supervisor", { command: "/learn" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/n8n/webhook/supervisor",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("rejects non-http N8N_BASE_URL values", async () => {
+    process.env.N8N_BASE_URL = "file:///tmp/n8n";
+    const { forwardToN8n } = require("../../src/services/n8n");
+
+    await expect(forwardToN8n("supervisor", {})).rejects.toThrow(
+      "Invalid N8N_BASE_URL: Unsupported protocol for N8N_BASE_URL: file:"
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
 });
 
 describe("n8n service — regression", () => {
@@ -307,5 +339,27 @@ describe("n8n service — regression", () => {
     } finally {
       clearTimeoutSpy.mockRestore();
     }
+  });
+
+  it("throws when payload exceeds configured size limit", async () => {
+    process.env.N8N_MAX_PAYLOAD_BYTES = "1024";
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const bigPayload = { data: "x".repeat(1100) };
+
+    await expect(forwardToN8n("supervisor", bigPayload)).rejects.toThrow(
+      "Payload too large for n8n forwarding"
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("throws a clear error for non-serializable payloads", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const circular = {};
+    circular.self = circular;
+
+    await expect(forwardToN8n("supervisor", circular)).rejects.toThrow(
+      "Failed to serialize payload for n8n forwarding"
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
