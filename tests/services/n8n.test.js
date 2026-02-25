@@ -1,0 +1,192 @@
+describe("n8n service", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...originalEnv, N8N_BASE_URL: "https://example.com" };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    delete global.fetch;
+  });
+
+  it("POSTs to the supervisor endpoint for known workflows", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("supervisor", { command: "/learn" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/supervisor",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("POSTs to the onboard endpoint", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("onboard", { command: "/onboard" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/onboard",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("skips forwarding when N8N_BASE_URL is not set", async () => {
+    delete process.env.N8N_BASE_URL;
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("supervisor", {});
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("throws on unknown workflow", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await expect(forwardToN8n("unknown-workflow", {})).rejects.toThrow(
+      "Unknown n8n workflow: unknown-workflow"
+    );
+  });
+});
+
+describe("n8n service — regression", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    // Pin retry limit to 1 so retry tests stay fast (one backoff sleep only)
+    process.env = {
+      ...originalEnv,
+      N8N_BASE_URL: "https://example.com",
+      N8N_RETRY_LIMIT: "1",
+    };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    process.env = originalEnv;
+    delete global.fetch;
+  });
+
+  // ── Routing ───────────────────────────────────────────────────────────────
+
+  it("POSTs to /webhook/backup", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("backup", { command: "/backup" });
+    await jest.runAllTimersAsync();
+    await p;
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/backup",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("POSTs to /webhook/slack-interactions", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("slack-interactions", { type: "action" });
+    await jest.runAllTimersAsync();
+    await p;
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/slack-interactions",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("POSTs to /webhook/slack/events", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("slack-events", { type: "app_mention" });
+    await jest.runAllTimersAsync();
+    await p;
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/webhook/slack/events",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  // ── Request shape ─────────────────────────────────────────────────────────
+
+  it("serialises the payload as a JSON body", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const payload = { command: "/learn", text: "3", user_id: "U123" };
+    const p = forwardToN8n("supervisor", payload);
+    await jest.runAllTimersAsync();
+    await p;
+    const [, options] = global.fetch.mock.calls[0];
+    expect(JSON.parse(options.body)).toEqual(payload);
+  });
+
+  it("sets Content-Type: application/json", async () => {
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("supervisor", {});
+    await jest.runAllTimersAsync();
+    await p;
+    const [, options] = global.fetch.mock.calls[0];
+    expect(options.headers["Content-Type"]).toBe("application/json");
+  });
+
+  it("sends X-Webhook-Secret header when N8N_WEBHOOK_SECRET is set", async () => {
+    process.env.N8N_WEBHOOK_SECRET = "supersecret";
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("supervisor", {});
+    await jest.runAllTimersAsync();
+    await p;
+    const [, options] = global.fetch.mock.calls[0];
+    expect(options.headers["X-Webhook-Secret"]).toBe("supersecret");
+  });
+
+  it("omits X-Webhook-Secret header when N8N_WEBHOOK_SECRET is not set", async () => {
+    delete process.env.N8N_WEBHOOK_SECRET;
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("supervisor", {});
+    await jest.runAllTimersAsync();
+    await p;
+    const [, options] = global.fetch.mock.calls[0];
+    expect(options.headers["X-Webhook-Secret"]).toBeUndefined();
+  });
+
+  // ── Retry logic ───────────────────────────────────────────────────────────
+
+  it("retries once on 5xx and resolves when second attempt succeeds", async () => {
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, statusText: "Service Unavailable" })
+      .mockResolvedValueOnce({ ok: true });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("supervisor", {});
+    await jest.runAllTimersAsync();
+    await p;
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry on 4xx client errors", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: "Bad Request",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const p = forwardToN8n("supervisor", {});
+    await jest.runAllTimersAsync();
+    await p;
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws after all retries are exhausted on persistent 5xx", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    // Attach rejection handler BEFORE advancing timers to avoid unhandledRejection
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+    // RETRY_LIMIT=1 → 2 total attempts (attempt 0 + attempt 1)
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+});

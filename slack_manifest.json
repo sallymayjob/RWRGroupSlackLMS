@@ -1,0 +1,115 @@
+{
+    "display_information": {
+        "name": "Agentic LMS",
+        "description": "Conversational AI Learning Management System powered by AI agents",
+        "background_color": "#2F855A"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Agentic LMS",
+            "always_online": true
+        },
+        "slash_commands": [
+            {
+                "command": "/learn",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Continue your next lesson",
+                "usage_hint": "Resume learning",
+                "should_escape": false
+            },
+            {
+                "command": "/submit",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Complete your mission for the current module",
+                "usage_hint": "Complete you mission",
+                "should_escape": false
+            },
+            {
+                "command": "/progress",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "View your learning progress",
+                "usage_hint": "Show my stats",
+                "should_escape": false
+            },
+            {
+                "command": "/enroll",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Enroll in a course",
+                "usage_hint": "Enter course ID",
+                "should_escape": true
+            },
+            {
+                "command": "/cert",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Get your certificate",
+                "usage_hint": "Issue certificate",
+                "should_escape": false
+            },
+            {
+                "command": "/report",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "View LMS analytics dashboard",
+                "usage_hint": "Show dashboard",
+                "should_escape": false
+            },
+            {
+                "command": "/gaps",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "View stuck learners & hard modules",
+                "usage_hint": "Show learning gaps",
+                "should_escape": false
+            },
+            {
+                "command": "/onboard",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Onboard new Employees",
+                "should_escape": false
+            },
+            {
+                "command": "/backup",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Back up LMS data to Google Sheets",
+                "usage_hint": "Trigger manual backup",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "scopes": {
+            "user": [
+                "users.profile:read",
+                "users:read",
+                "users:read.email",
+                "users.profile:write"
+            ],
+            "bot": [
+                "app_mentions:read",
+                "channels:history",
+                "channels:read",
+                "chat:write",
+                "commands",
+                "im:history",
+                "im:write",
+                "users:read",
+                "users:read.email",
+                "users.profile:read"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "https://YOUR_APP_URL/slack/events",
+            "bot_events": [
+                "app_mention",
+                "message.im"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://YOUR_APP_URL/slack/events"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
