@@ -1,7 +1,7 @@
 # LMS CSV Analytics Dashboard Guide
 
 ## 1) Purpose
-This guide defines a **standard LMS analytics dashboard** built from CSV exports. It is designed for non-technical operators in Google Sheets or Excel and includes:
+This guide defines a **standard LMS analytics dashboard** built from CSV exports, designed specifically for **Google Sheets** operators and includes:
 - dashboard layout,
 - required CSV datasets,
 - KPI formulas,
@@ -246,17 +246,18 @@ Design rules:
 
 ## 10) Automation Plan
 
-## 10.1 Data Refresh Automation
-Option A: n8n scheduled export
-- Trigger: daily 06:00
+## 10.1 Google Sheets Data Refresh Automation
+Option A (recommended): n8n → Google Drive CSV drop + Apps Script refresh
+- Trigger: daily 06:00 in n8n
 - Query PostgreSQL tables
-- Write CSV to cloud storage (Drive/S3)
-- Refresh spreadsheet data sources
+- Write/replace CSVs in a fixed Google Drive folder
+- Apps Script imports latest CSV files into raw tabs
+- Recompute pivots/KPIs and timestamp the refresh
 
-Option B: Google Apps Script pull
-- Script fetches latest CSV links nightly
-- Replaces raw data sheets
-- Recomputes helper and dashboard sheets
+Option B: Connected Sheets / BigQuery (advanced)
+- Keep warehouse tables in BigQuery
+- Use Connected Sheets for live pivots
+- Keep CSV method as fallback for portability
 
 ## 10.2 Recommended n8n Automation Steps
 1. Schedule trigger (daily)
@@ -317,3 +318,42 @@ Nudge Reactions (24h): {{reaction_count}}
 Assignment Submissions (24h): {{submission_count}}
 Status: {{status}}
 ```
+
+
+## 14) Google Sheets Implementation Blueprint
+
+### 14.1 Sheet Tabs (recommended)
+- `README`
+- `RAW_users`, `RAW_courses`, `RAW_enrolments`, `RAW_progress`, `RAW_modules`, `RAW_quiz_attempts`, `RAW_certificates`, `RAW_notifications`, `RAW_nudge_reactions`, `RAW_assignment_submissions`
+- `DIM_course`, `DIM_module`, `FACT_learning`
+- `KPI`, `COURSE_PERF`, `FUNNEL`, `RISK`, `DASHBOARD`
+
+### 14.2 Named Ranges (example)
+Define named ranges to make formulas readable:
+- `rng_users_id` = `RAW_users!A2:A`
+- `rng_progress_user` = `RAW_progress!B2:B`
+- `rng_progress_date` = `RAW_progress!D2:D`
+
+### 14.3 Apps Script Automation (starter)
+Use **Extensions → Apps Script** and add a daily trigger for `refreshDashboard()`.
+
+```javascript
+function refreshDashboard() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // 1) Load latest CSVs from Drive folder
+  // 2) Replace RAW_* tabs
+  // 3) Recalculate and refresh pivot tables/charts
+  // 4) Stamp refresh status
+  ss.getSheetByName('README').getRange('B2').setValue(new Date());
+}
+```
+
+### 14.4 Google Sheets Formula Notes
+- Prefer `ARRAYFORMULA`, `QUERY`, `FILTER`, `UNIQUE`, `COUNTUNIQUE` for speed/readability.
+- Cap open-ended ranges if sheet grows very large (e.g. `A2:A50000`).
+- Keep heavy joins in helper tabs to reduce dashboard chart lag.
+
+### 14.5 Sharing Model
+- Editors: LMS Ops + Analytics owner
+- Viewers: business stakeholders
+- Protect RAW sheets from manual edits (Data → Protect sheets and ranges).
