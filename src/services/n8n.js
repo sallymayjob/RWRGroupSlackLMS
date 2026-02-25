@@ -67,6 +67,11 @@ async function forwardToN8n(workflow, payload) {
   const route = ROUTES[workflow];
   if (!route) throw new Error(`Unknown n8n workflow: ${workflow}`);
 
+  if (!base) {
+    console.warn("N8N_BASE_URL is not set; skipping n8n forwarding.");
+    return;
+  }
+
   const url = `${base}${route}`;
   const headers = { "Content-Type": "application/json" };
   if (process.env.N8N_WEBHOOK_SECRET) {
@@ -81,29 +86,33 @@ async function forwardToN8n(workflow, payload) {
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    let res;
+
     try {
-      const res = await fetch(url, {
+      res = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-
-      if (res.ok) return;
-
-      // Retry on server errors; don't retry client errors
-      if (res.status < 500) {
-        console.error(`n8n ${workflow} responded ${res.status} — not retrying`);
-        return;
-      }
-
-      lastError = new Error(`n8n ${workflow} responded ${res.status} ${res.statusText}`);
     } catch (err) {
       lastError = err.name === "AbortError"
         ? new Error(`n8n ${workflow} timed out after ${TIMEOUT_MS}ms`)
         : err;
     } finally {
       clearTimeout(timer);
+    }
+
+    if (res?.ok) return;
+
+    // Retry on server errors; don't retry client errors
+    if (res && res.status < 500) {
+      console.error(`n8n ${workflow} responded ${res.status} — not retrying`);
+      return;
+    }
+
+    if (res) {
+      lastError = new Error(`n8n ${workflow} responded ${res.status} ${res.statusText}`);
     }
 
     console.warn(`n8n forward attempt ${attempt + 1} failed: ${lastError.message}`);
