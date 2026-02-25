@@ -1,0 +1,58 @@
+{
+  "incomingSlackEvent": {
+    "team_id": "T123",
+    "channel_id": "C123",
+    "user_id": "U123",
+    "command": "/learn",
+    "text": "",
+    "response_url": "https://hooks.slack.com/commands/..."
+  },
+  "normalizedCommand": {
+    "intent": "continue_learning",
+    "agentId": 3,
+    "command": "/learn",
+    "learner": {
+      "slackUserId": "U123"
+    },
+    "meta": {
+      "receivedAt": "2026-01-01T00:00:00Z",
+      "source": "slack"
+    }
+  },
+  "supportedManifestCommands": [
+    "/learn",
+    "/quiz",
+    "/progress",
+    "/enroll",
+    "/cert",
+    "/report",
+    "/gaps",
+    "/onboard"
+  ],
+  "routingExamples": [
+    {
+      "command": "/progress",
+      "intent": "view_progress",
+      "agentId": 12
+    },
+    {
+      "command": "/cert",
+      "intent": "issue_certificate",
+      "agentId": 7
+    },
+    {
+      "command": "/gaps",
+      "intent": "view_learning_gaps",
+      "agentId": 9
+    },
+    {
+      "command": "/enroll",
+      "intent": "enroll_user",
+      "agentId": 8
+    }
+  ],
+  "onboardWebhook": {
+    "path": "/webhook/onboard",
+    "note": "Handled by dedicated onboarding workflow (agent_13_onboarding)."
+  }
+}
