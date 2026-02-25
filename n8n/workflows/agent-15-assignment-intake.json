@@ -417,17 +417,6 @@
         ]
       ]
     },
-    "Log Assignment Icon Reaction": {
-      "main": [
-        [
-          {
-            "node": "Respond OK",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Resolve User For Submission": {
       "main": [
         [
@@ -449,17 +438,6 @@
         [
           {
             "node": "Save To Drive Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Assignment Submit Reaction": {
-      "main": [
-        [
-          {
-            "node": "Respond OK",
             "type": "main",
             "index": 0
           }

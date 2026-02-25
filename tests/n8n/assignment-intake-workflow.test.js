@@ -31,6 +31,15 @@ describe("assignment intake workflow", () => {
     expect(storeSubmission.parameters.query).toContain("INSERT INTO assignment_submissions");
   });
 
+  it("does not create duplicate webhook responses from logging-only branches", () => {
+    const workflow = loadWorkflow();
+    const connections = workflow.connections;
+
+    expect(connections["Save To Drive Webhook"].main[0][0].node).toBe("Respond OK");
+    expect(connections["Log Assignment Icon Reaction"]).toBeUndefined();
+    expect(connections["Log Assignment Submit Reaction"]).toBeUndefined();
+  });
+
   it("builds auto filename and forwards submission payload to drive webhook", () => {
     const workflow = loadWorkflow();
     const filenameNode = workflow.nodes.find((node) => node.name === "Build Auto Filename");
