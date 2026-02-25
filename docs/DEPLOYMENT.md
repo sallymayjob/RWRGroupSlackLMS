@@ -86,16 +86,17 @@ Wire these env vars and workflow constants before activating:
 ## 6) n8n Workflow Deployment Steps
 
 1. Import `workflows/slack_supervisor.workflow.json`
-2. Import `workflows/agent_subworkflow_template.workflow.json`
-3. Clone template into all agent workflows (1–14)
-4. Update `Execute Workflow` references
-5. Configure credentials:
+2. Import `workflows/slack_onboard.workflow.json`
+3. Import `workflows/agent_subworkflow_template.workflow.json`
+4. Clone template into all agent workflows (1–14)
+5. Update `Execute Workflow` references
+6. Configure credentials:
    - Slack
    - Notion
    - Google Sheets
    - Gemini (HTTP Request)
    - SMTP/Email provider
-6. Activate workflows
+7. Activate workflows
 
 ## 7) Scheduling Jobs
 
