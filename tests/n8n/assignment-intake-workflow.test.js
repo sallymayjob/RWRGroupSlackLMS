@@ -20,6 +20,17 @@ describe("assignment intake workflow", () => {
     expect(openModalNode.parameters.body.view).toContain("assignment_submission_modal");
   });
 
+  it("persists reaction/submission metadata for resend logic", () => {
+    const workflow = loadWorkflow();
+    const logIcon = workflow.nodes.find((node) => node.name === "Log Assignment Icon Reaction");
+    const logSubmit = workflow.nodes.find((node) => node.name === "Log Assignment Submit Reaction");
+    const storeSubmission = workflow.nodes.find((node) => node.name === "Store Assignment Submission");
+
+    expect(logIcon.parameters.query).toContain("INSERT INTO nudge_reactions");
+    expect(logSubmit.parameters.query).toContain("assignment_submit");
+    expect(storeSubmission.parameters.query).toContain("INSERT INTO assignment_submissions");
+  });
+
   it("builds auto filename and forwards submission payload to drive webhook", () => {
     const workflow = loadWorkflow();
     const filenameNode = workflow.nodes.find((node) => node.name === "Build Auto Filename");

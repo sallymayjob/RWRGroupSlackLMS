@@ -16,6 +16,14 @@ describe("proactive nudge workflow", () => {
     expect(queryNode.parameters.query).toContain("e.current_module_id AS lesson_id");
   });
 
+  it("re-sends only when there is no recent nudge reaction", () => {
+    const workflow = loadWorkflow();
+    const queryNode = workflow.nodes.find((node) => node.name === "Get Stuck Learners");
+
+    expect(queryNode.parameters.query).toContain("FROM nudge_reactions nr");
+    expect(queryNode.parameters.query).toContain("nr.reacted_at > NOW() - INTERVAL '24 hours'");
+  });
+
   it("sends interactive progress/lesson reaction buttons with lesson id payload", () => {
     const workflow = loadWorkflow();
     const sendNode = workflow.nodes.find((node) => node.name === "Send DM Nudge");

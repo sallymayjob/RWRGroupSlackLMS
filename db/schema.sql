@@ -104,3 +104,33 @@ CREATE TABLE IF NOT EXISTS course_tags (
   PRIMARY KEY (course_id, tag)
 );
 CREATE INDEX IF NOT EXISTS course_tags_tag_idx ON course_tags (tag);
+
+
+-- ── Nudge Reactions ──────────────────────────────────────────────────────────
+-- Tracks whether users reacted to proactive nudges so re-send logic can avoid
+-- repeatedly nudging engaged learners.
+CREATE TABLE IF NOT EXISTS nudge_reactions (
+  id           BIGSERIAL    PRIMARY KEY,
+  user_id      INT          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  lesson_id    INT,
+  reaction_type VARCHAR(64) NOT NULL, -- e.g. 'view_progress', 'resume_lesson', 'assignment_icon', 'assignment_submit'
+  reacted_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  payload      JSONB
+);
+CREATE INDEX IF NOT EXISTS nudge_reactions_user_idx ON nudge_reactions (user_id, reacted_at DESC);
+
+-- ── Assignment Submissions ───────────────────────────────────────────────────
+-- Stores assignment proof metadata captured from Slack modal submissions.
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+  id            BIGSERIAL    PRIMARY KEY,
+  user_id       INT          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  lesson_id     INT,
+  course_title  VARCHAR(255),
+  assignment_link TEXT,
+  screenshot_url  TEXT,
+  drive_filename  VARCHAR(255) NOT NULL,
+  drive_file_id   VARCHAR(255),
+  submitted_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  payload       JSONB
+);
+CREATE INDEX IF NOT EXISTS assignment_submissions_user_idx ON assignment_submissions (user_id, submitted_at DESC);

@@ -1,5 +1,5 @@
 {
-  "name": "Agent 15 — Assignment Intake",
+  "name": "Agent 15 \u2014 Assignment Intake",
   "nodes": [
     {
       "parameters": {
@@ -187,6 +187,121 @@
         240,
         120
       ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, slack_user_id FROM users WHERE slack_user_id = $1 LIMIT 1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user.id || $json.user_id || '']) }}"
+        }
+      },
+      "id": "a1500000-0000-0000-0000-000000000009",
+      "name": "Resolve User For Reaction",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -160,
+        40
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO nudge_reactions (user_id, lesson_id, reaction_type, payload) VALUES ($1, NULLIF($2,'')::INT, $3, $4::jsonb);",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Resolve User For Reaction').item.json.id, String(JSON.parse($json.actions[0].value || '{}').lesson_id || ''), 'assignment_icon', JSON.stringify($json)]) }}"
+        }
+      },
+      "id": "a1500000-0000-0000-0000-000000000010",
+      "name": "Log Assignment Icon Reaction",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        40,
+        40
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, slack_user_id FROM users WHERE slack_user_id = $1 LIMIT 1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id || '']) }}"
+        }
+      },
+      "id": "a1500000-0000-0000-0000-000000000011",
+      "name": "Resolve User For Submission",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO nudge_reactions (user_id, lesson_id, reaction_type, payload) VALUES ($1, NULLIF($2,'')::INT, 'assignment_submit', $3::jsonb);",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Resolve User For Submission').item.json.id, String($json.lesson_id || ''), JSON.stringify($json)]) }}"
+        }
+      },
+      "id": "a1500000-0000-0000-0000-000000000012",
+      "name": "Log Assignment Submit Reaction",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO assignment_submissions (user_id, lesson_id, course_title, assignment_link, screenshot_url, drive_filename, payload) VALUES ($1, NULLIF($2,'')::INT, $3, $4, $5, $6, $7::jsonb);",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$('Resolve User For Submission').item.json.id, String($json.lesson_id || ''), $json.course_title || '', $json.assignment_link || '', $json.screenshot_url || '', $json.auto_filename || '', JSON.stringify($json)]) }}"
+        }
+      },
+      "id": "a1500000-0000-0000-0000-000000000013",
+      "name": "Store Assignment Submission",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
     }
   ],
   "connections": {
@@ -222,6 +337,11 @@
         [
           {
             "node": "Open Assignment Modal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Resolve User For Reaction",
             "type": "main",
             "index": 0
           }
@@ -268,7 +388,7 @@
       "main": [
         [
           {
-            "node": "Save To Drive Webhook",
+            "node": "Resolve User For Submission",
             "type": "main",
             "index": 0
           }
@@ -276,6 +396,66 @@
       ]
     },
     "Save To Drive Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve User For Reaction": {
+      "main": [
+        [
+          {
+            "node": "Log Assignment Icon Reaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Assignment Icon Reaction": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve User For Submission": {
+      "main": [
+        [
+          {
+            "node": "Store Assignment Submission",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Assignment Submit Reaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Assignment Submission": {
+      "main": [
+        [
+          {
+            "node": "Save To Drive Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Assignment Submit Reaction": {
       "main": [
         [
           {
