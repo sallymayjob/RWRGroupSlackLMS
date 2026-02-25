@@ -189,4 +189,35 @@ describe("n8n service — regression", () => {
     // RETRY_LIMIT=1 → 2 total attempts (attempt 0 + attempt 1)
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
+
+  it("falls back to default retry limit when N8N_RETRY_LIMIT is invalid", async () => {
+    process.env.N8N_RETRY_LIMIT = "abc";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // default RETRY_LIMIT=2 → 3 total attempts
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("clears timeout timer when fetch throws", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("n8n down"));
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("n8n down");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // RETRY_LIMIT=1 → 2 attempts, and each attempt must clear its own timer.
+    expect(clearTimeoutSpy).toHaveBeenCalledTimes(2);
+    clearTimeoutSpy.mockRestore();
+  });
 });

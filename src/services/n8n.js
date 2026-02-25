@@ -43,8 +43,18 @@ const ROUTES = {
   "slack-events": "/webhook/slack/events",
 };
 
-const TIMEOUT_MS = parseInt(process.env.N8N_TIMEOUT_MS || "2500", 10);
-const RETRY_LIMIT = parseInt(process.env.N8N_RETRY_LIMIT || "2", 10);
+function parsePositiveInt(value, fallback) {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseNonNegativeInt(value, fallback) {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+const TIMEOUT_MS = parsePositiveInt(process.env.N8N_TIMEOUT_MS || "2500", 2500);
+const RETRY_LIMIT = parseNonNegativeInt(process.env.N8N_RETRY_LIMIT || "2", 2);
 
 /**
  * Sleep for `ms` milliseconds.
@@ -85,14 +95,17 @@ async function forwardToN8n(workflow, payload) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timer);
+      let res;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
 
       if (res.ok) return;
 
