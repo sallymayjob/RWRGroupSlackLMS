@@ -58,6 +58,7 @@ function parseIntEnv(value, fallback, { min = 0 } = {}) {
 
 const TIMEOUT_MS = parseIntEnv(process.env.N8N_TIMEOUT_MS, 2500, { min: 1 });
 const RETRY_LIMIT = parseIntEnv(process.env.N8N_RETRY_LIMIT, 2, { min: 0 });
+const MAX_PAYLOAD_BYTES = parseIntEnv(process.env.N8N_MAX_PAYLOAD_BYTES, 256 * 1024, { min: 1024 });
 
 /**
  * Sleep for `ms` milliseconds.
@@ -82,7 +83,29 @@ async function forwardToN8n(workflow, payload) {
     return;
   }
 
-  const url = `${base}${route}`;
+  let url;
+  try {
+    const parsedBase = new URL(base);
+    if (!/^https?:$/.test(parsedBase.protocol)) {
+      throw new Error(`Unsupported protocol for N8N_BASE_URL: ${parsedBase.protocol}`);
+    }
+    url = new URL(route, parsedBase).toString();
+  } catch (err) {
+    throw new Error(`Invalid N8N_BASE_URL: ${err.message}`);
+  }
+
+  let body;
+  try {
+    body = JSON.stringify(payload);
+  } catch {
+    throw new Error("Failed to serialize payload for n8n forwarding");
+  }
+
+  const bodySize = Buffer.byteLength(body, "utf8");
+  if (bodySize > MAX_PAYLOAD_BYTES) {
+    throw new Error(`Payload too large for n8n forwarding: ${bodySize} bytes > ${MAX_PAYLOAD_BYTES} bytes`);
+  }
+
   const headers = { "Content-Type": "application/json" };
   if (process.env.N8N_WEBHOOK_SECRET) {
     headers["X-Webhook-Secret"] = process.env.N8N_WEBHOOK_SECRET;
@@ -102,7 +125,7 @@ async function forwardToN8n(workflow, payload) {
       res = await fetch(url, {
         method: "POST",
         headers,
-        body: JSON.stringify(payload),
+        body,
         signal: controller.signal,
       });
     } catch (err) {
