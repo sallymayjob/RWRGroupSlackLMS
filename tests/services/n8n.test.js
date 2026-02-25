@@ -189,4 +189,123 @@ describe("n8n service — regression", () => {
     // RETRY_LIMIT=1 → 2 total attempts (attempt 0 + attempt 1)
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
+
+  it("falls back to default retry limit when N8N_RETRY_LIMIT is invalid", async () => {
+    process.env.N8N_RETRY_LIMIT = "abc";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // default RETRY_LIMIT=2 → 3 total attempts
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("falls back to default retry limit when N8N_RETRY_LIMIT is partially numeric", async () => {
+    process.env.N8N_RETRY_LIMIT = "2abc";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // default RETRY_LIMIT=2 → 3 total attempts
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("falls back to default retry limit when N8N_RETRY_LIMIT is negative", async () => {
+    process.env.N8N_RETRY_LIMIT = "-1";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // default RETRY_LIMIT=2 → 3 total attempts
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("uses zero retry limit when N8N_RETRY_LIMIT is 0", async () => {
+    process.env.N8N_RETRY_LIMIT = "0";
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    const { forwardToN8n } = require("../../src/services/n8n");
+    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    // RETRY_LIMIT=0 → 1 total attempt
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to default timeout when N8N_TIMEOUT_MS is invalid", async () => {
+    process.env.N8N_TIMEOUT_MS = "25ms";
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout");
+    try {
+      const { forwardToN8n } = require("../../src/services/n8n");
+      const p = forwardToN8n("supervisor", {});
+      await jest.runAllTimersAsync();
+      await p;
+
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2500);
+    } finally {
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
+  it("falls back to default timeout when N8N_TIMEOUT_MS is 0", async () => {
+    process.env.N8N_TIMEOUT_MS = "0";
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout");
+    try {
+      const { forwardToN8n } = require("../../src/services/n8n");
+      const p = forwardToN8n("supervisor", {});
+      await jest.runAllTimersAsync();
+      await p;
+
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2500);
+    } finally {
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
+  it("clears timeout timer when fetch throws", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("n8n down"));
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
+
+    try {
+      const { forwardToN8n } = require("../../src/services/n8n");
+      const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("n8n down");
+      await jest.runAllTimersAsync();
+      await assertion;
+
+      // RETRY_LIMIT=1 → 2 attempts, and each attempt must clear its own timer.
+      expect(clearTimeoutSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      clearTimeoutSpy.mockRestore();
+    }
+  });
 });

@@ -96,7 +96,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "=/learn",
+                    "leftValue": "/learn",
                     "rightValue": "={{ $json.command }}",
                     "operator": {
                       "type": "string",
@@ -298,7 +298,7 @@
           "value": "BjxEx4DjqMwlkrU4",
           "mode": "list",
           "cachedResultUrl": "/workflow/BjxEx4DjqMwlkrU4",
-          "cachedResultName": "Agent 08 — Enrollment Manager"
+          "cachedResultName": "Agent 08 \u2014 Enrollment Manager"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -317,7 +317,7 @@
         1040
       ],
       "id": "3e070ae3-84b4-466c-8178-7c6f36f46f6f",
-      "name": "Call 'Agent 08 — Enrollment Manager'"
+      "name": "Call 'Agent 08 \u2014 Enrollment Manager'"
     },
     {
       "parameters": {
@@ -326,7 +326,7 @@
           "value": "e0yErInDqhfKbNls",
           "mode": "list",
           "cachedResultUrl": "/workflow/e0yErInDqhfKbNls",
-          "cachedResultName": "Agent 03 — Tutor"
+          "cachedResultName": "Agent 03 \u2014 Tutor"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -345,7 +345,7 @@
         1616
       ],
       "id": "f1c41304-2d53-468d-83ca-01f3ccd7bc23",
-      "name": "Call 'Agent 03 — Tutor'"
+      "name": "Call 'Agent 03 \u2014 Tutor'"
     },
     {
       "parameters": {
@@ -354,7 +354,7 @@
           "value": "wpJOwdjIluP9n6Tu",
           "mode": "list",
           "cachedResultUrl": "/workflow/wpJOwdjIluP9n6Tu",
-          "cachedResultName": "Agent 02 — Quiz Master"
+          "cachedResultName": "Agent 02 \u2014 Quiz Master"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -373,7 +373,7 @@
         1808
       ],
       "id": "158f1212-ceb4-49e4-87a6-c3ec27e4f81f",
-      "name": "Call 'Agent 2 — Quiz"
+      "name": "Call 'Agent 2 \u2014 Quiz"
     },
     {
       "parameters": {
@@ -382,7 +382,7 @@
           "value": "z8j0WZhQCfsduOdi",
           "mode": "list",
           "cachedResultUrl": "/workflow/z8j0WZhQCfsduOdi",
-          "cachedResultName": "Agent 04 — Progress Tracker"
+          "cachedResultName": "Agent 04 \u2014 Progress Tracker"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -401,7 +401,7 @@
         1424
       ],
       "id": "645be86a-1410-437b-bb6b-78b3816bc483",
-      "name": "Call 'Agent 04 — Progress"
+      "name": "Call 'Agent 04 \u2014 Progress"
     },
     {
       "parameters": {
@@ -410,7 +410,7 @@
           "value": "TcY8C8malQ5SiTqZ",
           "mode": "list",
           "cachedResultUrl": "/workflow/TcY8C8malQ5SiTqZ",
-          "cachedResultName": "Agent 07 — Certification"
+          "cachedResultName": "Agent 07 \u2014 Certification"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -429,7 +429,7 @@
         2000
       ],
       "id": "a2ef74f2-8248-4d03-8a63-ec54764cc853",
-      "name": "Call 'Agent 07 — Cert"
+      "name": "Call 'Agent 07 \u2014 Cert"
     },
     {
       "parameters": {
@@ -438,7 +438,7 @@
           "value": "HpgyOs9wKZz2mAQd",
           "mode": "list",
           "cachedResultUrl": "/workflow/HpgyOs9wKZz2mAQd",
-          "cachedResultName": "Agent 12 — Reporting Agent (Gemini)"
+          "cachedResultName": "Agent 12 \u2014 Reporting Agent (Gemini)"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -457,7 +457,7 @@
         2192
       ],
       "id": "c9967eb6-6cea-41ee-9d50-b375f4b9c756",
-      "name": "Call 'Agent 12 — Reporting Agent (Gemini)'"
+      "name": "Call 'Agent 12 \u2014 Reporting Agent (Gemini)'"
     },
     {
       "parameters": {
@@ -466,7 +466,7 @@
           "value": "g5ZY673tbmDswpl4",
           "mode": "list",
           "cachedResultUrl": "/workflow/g5ZY673tbmDswpl4",
-          "cachedResultName": "Agent 09 — Gap Analyst (Gemini)"
+          "cachedResultName": "Agent 09 \u2014 Gap Analyst (Gemini)"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -485,7 +485,7 @@
         2416
       ],
       "id": "93e6cbae-c305-4d20-a8f6-088d24626536",
-      "name": "Call 'Agent 09 — Gap Analyst (Gemini)'"
+      "name": "Call 'Agent 09 \u2014 Gap Analyst (Gemini)'"
     },
     {
       "parameters": {
@@ -494,7 +494,7 @@
           "value": "a5CatalogWrkflw01",
           "mode": "list",
           "cachedResultUrl": "/workflow/a5CatalogWrkflw01",
-          "cachedResultName": "Agent 05 — Course Catalog"
+          "cachedResultName": "Agent 05 \u2014 Course Catalog"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -508,9 +508,12 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [-2800, 2608],
+      "position": [
+        -2800,
+        2608
+      ],
       "id": "a5000000-0000-0000-0000-000000000010",
-      "name": "Call 'Agent 05 — Course Catalog'"
+      "name": "Call 'Agent 05 \u2014 Course Catalog'"
     },
     {
       "parameters": {
@@ -519,7 +522,7 @@
           "value": "a6HelpWorkflow001",
           "mode": "list",
           "cachedResultUrl": "/workflow/a6HelpWorkflow001",
-          "cachedResultName": "Agent 06 — Help"
+          "cachedResultName": "Agent 06 \u2014 Help"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -533,9 +536,12 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [-2800, 2800],
+      "position": [
+        -2800,
+        2800
+      ],
       "id": "a6000000-0000-0000-0000-000000000010",
-      "name": "Call 'Agent 06 — Help'"
+      "name": "Call 'Agent 06 \u2014 Help'"
     },
     {
       "parameters": {
@@ -544,7 +550,7 @@
           "value": "a10UnEnrollAgent1",
           "mode": "list",
           "cachedResultUrl": "/workflow/a10UnEnrollAgent1",
-          "cachedResultName": "Agent 10 — Unenroll"
+          "cachedResultName": "Agent 10 \u2014 Unenroll"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -558,9 +564,12 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [-2800, 2992],
+      "position": [
+        -2800,
+        2992
+      ],
       "id": "a10000000-0000-0000-0000-000000000010",
-      "name": "Call 'Agent 10 — Unenroll'"
+      "name": "Call 'Agent 10 \u2014 Unenroll'"
     },
     {
       "parameters": {
@@ -585,7 +594,7 @@
           "value": "R8adLhGssCewBrKC",
           "mode": "list",
           "cachedResultUrl": "/workflow/R8adLhGssCewBrKC",
-          "cachedResultName": "Agent 13 — Onboarding Agent (Gemini)"
+          "cachedResultName": "Agent 13 \u2014 Onboarding Agent (Gemini)"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -604,42 +613,7 @@
         1232
       ],
       "id": "b9535e98-d224-4612-9528-e6b90a89f2ab",
-      "name": "Call 'Agent 13 — Onboarding"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "204912fb-b674-4c8d-8b7f-d0d96391a0bc",
-              "leftValue": "/enroll",
-              "rightValue": "={{ $('Edit Fields').item.json.command }}",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -3696,
-        816
-      ],
-      "id": "25d0a6a3-d27f-4488-8c69-8d186fb9a957",
-      "name": "If",
-      "alwaysOutputData": true
+      "name": "Call 'Agent 13 \u2014 Onboarding"
     },
     {
       "parameters": {
@@ -667,7 +641,10 @@
       "name": "Validate Slack Signature",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-3920, 1712]
+      "position": [
+        -3920,
+        1712
+      ]
     },
     {
       "parameters": {
@@ -697,7 +674,10 @@
       "name": "Signature Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [-3760, 1712]
+      "position": [
+        -3760,
+        1712
+      ]
     },
     {
       "parameters": {
@@ -708,10 +688,13 @@
         }
       },
       "id": "sec00001-0000-0000-0000-000000000003",
-      "name": "Reject — Invalid Signature",
+      "name": "Reject \u2014 Invalid Signature",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [-3760, 1900]
+      "position": [
+        -3760,
+        1900
+      ]
     }
   ],
   "pinData": {
@@ -753,86 +736,98 @@
       "main": [
         [
           {
-            "node": "Call 'Agent 13 — Onboarding",
+            "node": "Call 'Agent 13 \u2014 Onboarding",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 08 — Enrollment Manager'",
+            "node": "Call 'Agent 08 \u2014 Enrollment Manager'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 04 — Progress",
+            "node": "Call 'Agent 04 \u2014 Progress",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 03 — Tutor'",
+            "node": "Call 'Agent 03 \u2014 Tutor'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 2 — Quiz",
+            "node": "Call 'Agent 2 \u2014 Quiz",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 07 — Cert",
+            "node": "Call 'Agent 07 \u2014 Cert",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 12 — Reporting Agent (Gemini)'",
+            "node": "Call 'Agent 12 \u2014 Reporting Agent (Gemini)'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 09 — Gap Analyst (Gemini)'",
+            "node": "Call 'Agent 09 \u2014 Gap Analyst (Gemini)'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 05 — Course Catalog'",
+            "node": "Call 'Agent 05 \u2014 Course Catalog'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 06 — Help'",
+            "node": "Call 'Agent 06 \u2014 Help'",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Call 'Agent 10 — Unenroll'",
+            "node": "Call 'Agent 10 \u2014 Unenroll'",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Call 'Agent 05 — Course Catalog'": { "main": [[]] },
-    "Call 'Agent 06 — Help'": { "main": [[]] },
-    "Call 'Agent 10 — Unenroll'": { "main": [[]] },
+    "Call 'Agent 05 \u2014 Course Catalog'": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'Agent 06 \u2014 Help'": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'Agent 10 \u2014 Unenroll'": {
+      "main": [
+        []
+      ]
+    },
     "When clicking 'Execute workflow'": {
       "main": [
         []
@@ -849,14 +844,8 @@
         ]
       ]
     },
-    "Call 'Agent 13 — Onboarding": {
+    "Call 'Agent 13 \u2014 Onboarding": {
       "main": [
-        []
-      ]
-    },
-    "If": {
-      "main": [
-        [],
         []
       ]
     },
@@ -893,7 +882,7 @@
         ],
         [
           {
-            "node": "Reject — Invalid Signature",
+            "node": "Reject \u2014 Invalid Signature",
             "type": "main",
             "index": 0
           }

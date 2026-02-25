@@ -46,8 +46,18 @@ const ROUTES = {
   "slack-events": "/webhook/slack/events",
 };
 
-const TIMEOUT_MS = parseInt(process.env.N8N_TIMEOUT_MS || "2500", 10);
-const RETRY_LIMIT = parseInt(process.env.N8N_RETRY_LIMIT || "2", 10);
+function parseIntEnv(value, fallback, { min = 0 } = {}) {
+  if (value == null) return fallback;
+
+  const trimmed = String(value).trim();
+  if (!/^\d+$/.test(trimmed)) return fallback;
+
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed >= min ? parsed : fallback;
+}
+
+const TIMEOUT_MS = parseIntEnv(process.env.N8N_TIMEOUT_MS, 2500, { min: 1 });
+const RETRY_LIMIT = parseIntEnv(process.env.N8N_RETRY_LIMIT, 2, { min: 0 });
 
 /**
  * Sleep for `ms` milliseconds.
