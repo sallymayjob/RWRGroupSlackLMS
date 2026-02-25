@@ -57,6 +57,17 @@ describe("n8n service", () => {
     );
   });
 
+  it("preserves path prefixes in N8N_BASE_URL", async () => {
+    process.env.N8N_BASE_URL = "https://example.com/n8n";
+    const { forwardToN8n } = require("../../src/services/n8n");
+    await forwardToN8n("supervisor", { command: "/learn" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.com/n8n/webhook/supervisor",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
   it("rejects non-http N8N_BASE_URL values", async () => {
     process.env.N8N_BASE_URL = "file:///tmp/n8n";
     const { forwardToN8n } = require("../../src/services/n8n");

@@ -89,7 +89,11 @@ async function forwardToN8n(workflow, payload) {
     if (!/^https?:$/.test(parsedBase.protocol)) {
       throw new Error(`Unsupported protocol for N8N_BASE_URL: ${parsedBase.protocol}`);
     }
-    url = new URL(route, parsedBase).toString();
+    // Preserve any path prefix in N8N_BASE_URL (e.g. https://host/n8n)
+    // while still supporting plain host URLs.
+    const normalisedBase = parsedBase.toString().replace(/\/?$/, "/");
+    const normalisedRoute = route.replace(/^\//, "");
+    url = new URL(normalisedRoute, normalisedBase).toString();
   } catch (err) {
     throw new Error(`Invalid N8N_BASE_URL: ${err.message}`);
   }
