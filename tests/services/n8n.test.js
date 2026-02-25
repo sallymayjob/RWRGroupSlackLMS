@@ -296,13 +296,16 @@ describe("n8n service — regression", () => {
     global.fetch = jest.fn().mockRejectedValue(new Error("n8n down"));
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
 
-    const { forwardToN8n } = require("../../src/services/n8n");
-    const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("n8n down");
-    await jest.runAllTimersAsync();
-    await assertion;
+    try {
+      const { forwardToN8n } = require("../../src/services/n8n");
+      const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("n8n down");
+      await jest.runAllTimersAsync();
+      await assertion;
 
-    // RETRY_LIMIT=1 → 2 attempts, and each attempt must clear its own timer.
-    expect(clearTimeoutSpy).toHaveBeenCalledTimes(2);
-    clearTimeoutSpy.mockRestore();
+      // RETRY_LIMIT=1 → 2 attempts, and each attempt must clear its own timer.
+      expect(clearTimeoutSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      clearTimeoutSpy.mockRestore();
+    }
   });
 });
