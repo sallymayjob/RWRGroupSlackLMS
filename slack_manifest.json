@@ -21,7 +21,7 @@
                 "command": "/submit",
                 "url": "https://YOUR_APP_URL/slack/events",
                 "description": "Complete your mission for the current module",
-                "usage_hint": "Complete you mission",
+                "usage_hint": "Complete your mission",
                 "should_escape": false
             },
             {
@@ -35,6 +35,13 @@
                 "command": "/enroll",
                 "url": "https://YOUR_APP_URL/slack/events",
                 "description": "Enroll in a course",
+                "usage_hint": "Enter course ID",
+                "should_escape": true
+            },
+            {
+                "command": "/unenroll",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Unenroll from a course",
                 "usage_hint": "Enter course ID",
                 "should_escape": true
             },
@@ -60,6 +67,20 @@
                 "should_escape": false
             },
             {
+                "command": "/courses",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Browse available courses",
+                "usage_hint": "List all courses",
+                "should_escape": false
+            },
+            {
+                "command": "/help",
+                "url": "https://YOUR_APP_URL/slack/events",
+                "description": "Get help with LMS commands",
+                "usage_hint": "Show available commands",
+                "should_escape": false
+            },
+            {
                 "command": "/onboard",
                 "url": "https://YOUR_APP_URL/slack/events",
                 "description": "Onboard new Employees",
@@ -79,8 +100,7 @@
             "user": [
                 "users.profile:read",
                 "users:read",
-                "users:read.email",
-                "users.profile:write"
+                "users:read.email"
             ],
             "bot": [
                 "app_mentions:read",

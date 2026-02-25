@@ -8,13 +8,16 @@
  *
  *   supervisor  → POST /webhook/supervisor
  *                 Switch node dispatches by command to individual agents:
- *                   /learn    → Agent 03 — Tutor          (e0yErInDqhfKbMls)
+ *                   /learn    → Agent 03 — Tutor          (e0yErInDqhfKbNls)
  *                   /submit   → Agent 02 — Quiz Master    (wpJOwdjIluP9n6Tu)
  *                   /progress → Agent 04 — Progress       (z8j0WZhQCfsduOdi)
  *                   /enroll   → Agent 08 — Enrollment Mgr (BjxEx4DjqMwlkrU4)
+ *                   /unenroll → Agent 10 — Unenroll       (via supervisor)
  *                   /cert     → Agent 07 — Certification  (TcY8C8malQ5SiTqZ)
  *                   /report   → Agent 12 — Reporting      (HpgyOs9wKZz2mAQd)
  *                   /gaps     → Agent 09 — Gap Analyst     (g5ZY673tbmDswpl4)
+ *                   /courses  → Agent 05 — Course Catalog (via supervisor)
+ *                   /help     → Agent 06 — Help           (via supervisor)
  *
  *   onboard     → POST /webhook/onboard
  *                   /onboard  → Agent 13 — Onboarding     (R8adLhGssCewBrKC)
@@ -61,11 +64,6 @@ function sleep(ms) {
  */
 async function forwardToN8n(workflow, payload) {
   const base = process.env.N8N_BASE_URL;
-  if (!base) {
-    console.warn("N8N_BASE_URL not set — skipping forward");
-    return;
-  }
-
   const route = ROUTES[workflow];
   if (!route) throw new Error(`Unknown n8n workflow: ${workflow}`);
 
@@ -78,21 +76,18 @@ async function forwardToN8n(workflow, payload) {
   let lastError;
   for (let attempt = 0; attempt <= RETRY_LIMIT; attempt++) {
     if (attempt > 0) {
-      await sleep(200 * attempt); // 200ms, 400ms backoff
+      await sleep(200 * attempt); // linear backoff: 200ms, 400ms
     }
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
       const res = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-
-      clearTimeout(timer);
 
       if (res.ok) return;
 
@@ -107,6 +102,8 @@ async function forwardToN8n(workflow, payload) {
       lastError = err.name === "AbortError"
         ? new Error(`n8n ${workflow} timed out after ${TIMEOUT_MS}ms`)
         : err;
+    } finally {
+      clearTimeout(timer);
     }
 
     console.warn(`n8n forward attempt ${attempt + 1} failed: ${lastError.message}`);

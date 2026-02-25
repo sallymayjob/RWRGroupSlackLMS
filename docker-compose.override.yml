@@ -1,0 +1,12 @@
+# Local development overrides — applied automatically by `docker compose up`.
+# NOT used in production (deploy with `docker compose -f docker-compose.yml up`).
+#
+# Mounts source code into the container so code changes are reflected without
+# a full image rebuild. The anonymous /app/node_modules volume prevents the
+# host node_modules from shadowing the container's installed dependencies.
+
+services:
+  app:
+    volumes:
+      - .:/app
+      - /app/node_modules
