@@ -26,9 +26,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/node_modules
     restart: unless-stopped
 
   n8n:
@@ -55,6 +52,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: rwrgroup_lms_postgres
+    # SECURITY: always set POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB in .env
+    # The fallback values below are for local dev only — never use in production.
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-lms_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
