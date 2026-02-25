@@ -43,18 +43,18 @@ const ROUTES = {
   "slack-events": "/webhook/slack/events",
 };
 
-function parsePositiveInt(value, fallback) {
-  const parsed = parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+function parseIntEnv(value, fallback, { min = 0 } = {}) {
+  if (value == null) return fallback;
+
+  const trimmed = String(value).trim();
+  if (!/^\d+$/.test(trimmed)) return fallback;
+
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed >= min ? parsed : fallback;
 }
 
-function parseNonNegativeInt(value, fallback) {
-  const parsed = parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-}
-
-const TIMEOUT_MS = parsePositiveInt(process.env.N8N_TIMEOUT_MS || "2500", 2500);
-const RETRY_LIMIT = parseNonNegativeInt(process.env.N8N_RETRY_LIMIT || "2", 2);
+const TIMEOUT_MS = parseIntEnv(process.env.N8N_TIMEOUT_MS, 2500, { min: 1 });
+const RETRY_LIMIT = parseIntEnv(process.env.N8N_RETRY_LIMIT, 2, { min: 0 });
 
 /**
  * Sleep for `ms` milliseconds.
