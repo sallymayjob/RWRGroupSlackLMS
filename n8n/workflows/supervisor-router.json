@@ -96,7 +96,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "=/learn",
+                    "leftValue": "/learn",
                     "rightValue": "={{ $json.command }}",
                     "operator": {
                       "type": "string",
