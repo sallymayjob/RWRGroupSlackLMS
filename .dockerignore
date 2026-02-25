@@ -1,0 +1,28 @@
+# Dependencies — reinstalled inside image via npm ci
+node_modules/
+
+# Secrets — never bake into the image
+.env
+.env.local
+
+# Version control
+.git/
+.gitkeep
+
+# Dev tooling / tests — not needed in production image
+tests/
+coverage/
+*.test.js
+.eslintrc*
+.prettierrc*
+jest.config.js
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
