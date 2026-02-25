@@ -64,11 +64,6 @@ function sleep(ms) {
  */
 async function forwardToN8n(workflow, payload) {
   const base = process.env.N8N_BASE_URL;
-  if (!base) {
-    console.warn("N8N_BASE_URL not set — skipping forward");
-    return;
-  }
-
   const route = ROUTES[workflow];
   if (!route) throw new Error(`Unknown n8n workflow: ${workflow}`);
 
