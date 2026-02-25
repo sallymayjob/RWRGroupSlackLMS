@@ -1,142 +1,152 @@
-# RWR Group Slack LMS (n8n Automation)
+# RWRGroup Agentic LMS
 
-This project is an **n8n-based Slack Learning Management System (LMS)** using **Gemini** as the primary AI model.
+A Slack-integrated Learning Management System powered by AI agents (n8n) for the RWR Group organisation.
 
-It orchestrates a supervisor workflow that routes Slack commands/events to specialized sub-workflows (agents), then synchronizes:
-- **Notion DB** (canonical source)
-- **LM Data Table** (operational store)
-- **Google Sheets** (dashboard/reporting)
+> For full installation instructions see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
-## n8n Project Structure
+---
 
-- `workflows/slack_supervisor.workflow.json` → Main trigger + parser + switch/router
-- `workflows/agent_subworkflow_template.workflow.json` → Reusable sub-workflow template for each agent
-- `workflows/payload_examples.json` → Example Slack payload and normalized command JSON
-- `docs/ENVIRONMENT_SETUP.md` → Environment + credentials + go-live steps
-- `docs/DEPLOYMENT.md` → Full production deployment details
-- `docs/SECURITY_REVIEW.md` → Security vulnerabilities identified and remediation status
-- `docs/SCHEMA.md` → Notion curriculum schema + Universal Lesson Canvas constraints
-- `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md` → master system prompt for Agent 1 (Content Architect)
-- `docs/DATABASE_SCHEMA.md` → operational SQL schema overview
-- `docs/CODE_REVIEW.md` → code review findings and remediations
-- `docs/SLACK_MANIFEST_INTEGRATION.md` → command/event URL mapping for the provided Slack manifest
-- `docs/slack_app_manifest.json` → Slack app manifest currently used for command/event wiring
-- `docker-compose.yml` → Self-hosted baseline stack (n8n + postgres + redis)
+## Architecture
 
-## Agent Map (n8n Routing)
-
-| Agent ID | n8n Sub-Workflow Name | Responsibility |
-|---|---|---|
-| 1 | `agent_01_content_architect` | Content updates + sync triggers |
-| 2 | `agent_02_quiz_master` | Weekly 30-min deep-dive quiz + assessment |
-| 3 | `agent_03_tutor` | Relearn/expand guidance |
-| 4 | `agent_04_progress_tracker` | `/submit <lesson_code>` + `/complete` tracking |
-| 5 | `agent_05_feedback_analyst` | Lesson feedback analysis + admin report |
-| 6 | `agent_06_support` | General support answers |
-| 7 | `agent_07_certification` | Weekly completion certification + manager notice |
-| 8 | `agent_08_enrollment_manager` | Enrollment verification and add workflow |
-| 9 | `agent_09_gap_analyst` | Stuck learner detection + nudges |
-| 10 | `agent_10_compliance_reviewer` | SOP-5 compliance checks |
-| 11 | `agent_11_notification` | Learner/manager reminders |
-| 12 | `agent_12_reporting` | Google Sheets dashboard updates |
-| 13 | `agent_13_onboarding` | New-user pathway assignment |
-| 14 | `agent_14_learning_asset_formatter` | NotebookLM export format assistant |
-
-## Quick Start
-
-1. Copy `.env.example` → `.env` and fill credentials.
-2. Import workflow JSONs into n8n.
-3. Duplicate template into all 14 agent workflows.
-4. Wire Execute Workflow references in supervisor.
-5. Configure Slack command URLs to `/webhook/supervisor` (and `/webhook/onboard` for onboarding).
-6. Activate workflows and run payload smoke tests.
-
-## Slack Command Contract
-
-Supervisor webhook (`/webhook/supervisor`) commands from your manifest:
-- `/learn`
-- `/quiz`
-- `/progress`
-- `/enroll`
-- `/cert`
-- `/report`
-- `/gaps`
-
-Dedicated onboarding webhook:
-- `/onboard` -> `/webhook/onboard`
-
-Legacy commands remain supported for backward compatibility: `/submit`, `/complete`, `/feedback`, `/tutor`.
-
-## Weekly Cadence
-
-- Mon–Fri: micro-learning dispatch
-- Fri: deep-dive quiz (30 min) + assessment
-- Post-quiz: tutor-led relearn/expand
-- End-of-cycle: certification + reporting
-
-## Data Sync Order (Required)
-
-1. Write/confirm in Notion
-2. Write LM Data Table
-3. Update Google Sheets dashboard
-
-Use idempotency key: `source:entity_id:version`.
-
-## Stress Testing (5 Personas)
-
-A synthetic stress test harness is included to evaluate routing and sync behavior for five learner personas.
-The harness is deterministic by seed (safe for before/after code-review comparisons).
-
-Run:
-
-```bash
-python tests/stress_test_simulation.py --seed 42 --workers 10 --users 10 --output reports/stress_test_results.json
+```
+Slack user
+    │  slash command / DM / @mention
+    ▼
+Slack API ──► This app (Bolt HTTP, port 3000)
+                  │  signature verified · ack() sent immediately (< 3s)
+                  ▼
+          n8n Supervisor Router  (POST /webhook/supervisor)
+                  │
+                  ├─ Parse Slack Payload (Code node)
+                  ├─ Edit Fields  — normalises fields, extracts `lesson` number
+                  │
+                  └─ Switch on command
+                        /learn    ──► Agent 03 — Tutor
+                        /submit   ──► Agent 02 — Quiz Master
+                        /progress ──► Agent 04 — Progress Tracker
+                        /enroll   ──► Agent 08 — Enrollment Manager
+                        /unenroll ──► Agent 10 — Unenroll
+                        /cert     ──► Agent 07 — Certification
+                        /report   ──► Agent 12 — Reporting Agent (Gemini)
+                        /gaps     ──► Agent 09 — Gap Analyst (Gemini)
+                        /courses  ──► Agent 05 — Course Catalog
+                        /help     ──► Agent 06 — Help
+                        /onboard  ──► Agent 13 — Onboarding Agent (Gemini)  [own webhook]
+                        /backup   ──► Agent 14 — Google Sheets Backup       [own webhook]
+                                            │
+                                            ▼
+                                 Response via response_url
+                                 or Slack Web API
 ```
 
-See summarized findings in:
-- `reports/STRESS_TEST_REPORT.md`
-- `reports/stress_test_results.json`
-- `reports/STRESS_TEST_USERS_5_TO_100.md`
-- `reports/stress_test_users_5_to_100_summary.json`
+**Stack:** Node.js 20 · Slack Bolt v3 · PostgreSQL 16 · Redis 7 · n8n · Gemini
 
+---
 
+## Agent Registry
 
-## Notion Workspace (Provided)
+| Agent | n8n Workflow ID | Triggered by |
+|-------|----------------|--------------|
+| Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` | `/submit` |
+| Agent 03 — Tutor | `e0yErInDqhfKbNls` | `/learn` |
+| Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` | `/progress` |
+| Agent 05 — Course Catalog | supervisor route | `/courses` |
+| Agent 06 — Help | supervisor route | `/help` |
+| Agent 07 — Certification | `TcY8C8malQ5SiTqZ` | `/cert` |
+| Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` | `/enroll` |
+| Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` | `/gaps` |
+| Agent 10 — Unenroll | supervisor route | `/unenroll` |
+| Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` | `/report` |
+| Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` | `/onboard` |
+| Agent 14 — Google Sheets Backup | `BackupToGSheets01` | `/backup` + nightly 2am UTC |
 
-Configured workspace root:
-- `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
+> n8n workflow source files are in `n8n/workflows/`. Import them via **n8n → Workflows → Import from file**.
 
-Set IDs in `.env`:
-- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
-- `NOTION_COURSES_DB_ID`
-- `NOTION_MONTHS_DB_ID`
-- `NOTION_LESSONS_DB_ID`
+---
 
-## Schema
+## Slash Commands
 
-Use `docs/SCHEMA.md` plus CSV schema files in `data/` to implement the Notion Curriculum model (Courses → Months → Lessons) and ULC authoring constraints.
+| Command | Agent | Description |
+|---------|-------|-------------|
+| `/learn [lesson#]` | Tutor (03) | Resume (or jump to) a lesson |
+| `/submit` | Quiz Master (02) | Complete the mission for the current module |
+| `/progress` | Progress Tracker (04) | View your learning progress |
+| `/enroll <course-code>` | Enrollment Manager (08) | Enrol in a course |
+| `/unenroll <course-code>` | Unenroll (10) | Unenrol from a course |
+| `/cert` | Certification (07) | Issue your certificate |
+| `/report` | Reporting Agent (12) | LMS analytics dashboard (admins) |
+| `/gaps` | Gap Analyst (09) | View stuck learners & hard modules (admins) |
+| `/courses` | Course Catalog (05) | Browse available courses |
+| `/help` | Help (06) | Show available commands |
+| `/onboard` | Onboarding Agent (13) | Onboard a new employee |
+| `/backup` | Backup (14) | Trigger manual backup to Google Sheets |
 
-Operational SQL schema: `data/lms_database_schema.sql` (overview in `docs/DATABASE_SCHEMA.md`).
+> `/learn` accepts an optional lesson number — e.g. `/learn 3` jumps directly to lesson 3.
 
+---
 
-## Security
-
-See `docs/SECURITY_REVIEW.md` for vulnerability findings, fixes, and remaining hardening recommendations.
-
-
-## QA Validation (Performance, Regression, Penetration-Style)
-
-Run:
+## Quick Start (local dev)
 
 ```bash
-python tests/qa_performance_regression_pentest.py
+# 1. Clone and install
+git clone <repo-url> && cd RWRGroupSlackLMS
+npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Fill in SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET, N8N_BASE_URL …
+
+# 3. Start backing services + app (live-reload via override volumes)
+docker compose up postgres redis -d
+psql "$DATABASE_URL" -f db/schema.sql
+npm run dev
 ```
 
-Outputs:
-- `reports/qa_validation_summary.json`
-- `reports/QA_VALIDATION_REPORT.md`
+Or run the full stack in Docker:
 
+```bash
+docker compose up --build
+```
 
-## Content Architect Master Prompt
+Health endpoint: `GET http://localhost:3000/health`
 
-Use `docs/CONTENT_ARCHITECT_MASTER_PROMPT.md` as the authoritative Claude Project Custom Instructions for **agent_01_content_architect**.
+---
+
+## Development
+
+```bash
+make test      # run Jest test suite
+make lint      # ESLint
+make format    # Prettier
+make dev       # start with nodemon (hot-reload)
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for production deployment, Nginx setup, n8n workflow import, and upgrade procedures.
+
+---
+
+## Environment Variables
+
+See `.env.example` for the full list. Required at startup (app exits with a clear error if any are missing):
+
+| Variable | Description |
+|----------|-------------|
+| `SLACK_BOT_TOKEN` | `xoxb-…` bot token from Slack app settings |
+| `SLACK_SIGNING_SECRET` | Signing secret from Slack app settings |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis connection string |
+| `N8N_BASE_URL` | Base URL of your n8n instance |
+| `N8N_WEBHOOK_SECRET` | Optional shared secret for n8n webhook auth |
+| `GOOGLE_SHEETS_BACKUP_ID` | Spreadsheet ID for Agent 14 backups |
+| `SLACK_ADMIN_WEBHOOK_URL` | Incoming webhook for backup notifications |
+
+---
+
+## Slack App Setup
+
+Import `slack_manifest.json` into your Slack workspace:
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**
+2. Paste the contents of `slack_manifest.json`
+3. Replace every `https://YOUR_APP_URL` placeholder with your public app URL
+4. Install the app to your workspace and copy the bot token + signing secret into `.env`
