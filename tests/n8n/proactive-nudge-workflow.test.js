@@ -30,4 +30,15 @@ describe("proactive nudge workflow", () => {
     const resumeButton = actions.elements.find((element) => element.action_id === "nudge_resume_lesson");
     expect(resumeButton.value).toContain("lesson_id");
   });
+  it("includes assignment action button for users who have not reacted", () => {
+    const workflow = loadWorkflow();
+    const sendNode = workflow.nodes.find((node) => node.name === "Send DM Nudge");
+    const actions = sendNode.parameters.body.blocks.find((block) => block.type === "actions");
+
+    const assignmentButton = actions.elements.find((element) => element.action_id === "nudge_assignment_icon");
+    expect(assignmentButton).toBeDefined();
+    expect(assignmentButton.text.text).toContain("Assignment");
+    expect(assignmentButton.value).toContain("lesson_id");
+  });
+
 });

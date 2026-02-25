@@ -72,7 +72,7 @@
               "elements": [
                 {
                   "type": "mrkdwn",
-                  "text": "Use the buttons to react. `Resume Lesson` carries your lesson id so the next step can fetch that lesson quickly."
+                  "text": "Use the buttons to react. Tap \ud83d\udcdd Assignment to open a submission form (link or screenshot) that is auto-named and saved to Drive."
                 }
               ]
             },
@@ -96,6 +96,16 @@
                     "text": "Resume Lesson"
                   },
                   "value": "={{ String($json.lesson_id || \"\") }}"
+                },
+                {
+                  "type": "button",
+                  "action_id": "nudge_assignment_icon",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "\ud83d\udcdd Assignment"
+                  },
+                  "style": "primary",
+                  "value": "={{ JSON.stringify({ user_id: $json.slack_user_id, lesson_id: $json.lesson_id, course_title: $json.course_title }) }}"
                 }
               ]
             }
