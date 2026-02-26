@@ -161,7 +161,14 @@ Recovery drill cadence:
 
 ## Database Schema Reference
 
-Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+Use `db/schema.sql` as the deploy-time canonical schema baseline (see `docs/DATABASE_SCHEMA.md`).
+
+Apply schema changes after bootstrap from `db/migrations/` using ascending versions with the format `V<version>__<description>.sql` (for example `V0002__add_quiz_attempt_indexes.sql`).
+
+Versioning rules:
+- Migrations are append-only and immutable after release.
+- Versions must be strictly increasing.
+- `db/schema.sql` should be periodically reconciled to match the latest migrated state for new-environment bootstrap.
 
 
 ## Content Architect Prompt Binding
