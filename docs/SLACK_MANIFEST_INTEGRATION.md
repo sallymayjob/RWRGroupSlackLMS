@@ -6,7 +6,7 @@ This project is aligned to your provided Slack manifest.
 - `docs/slack_app_manifest.json`
 
 ## Endpoint mapping
-- Supervisor commands (`/learn`, `/quiz`, `/progress`, `/enroll`, `/cert`, `/report`, `/gaps`) -> `POST /webhook/supervisor`
+- Supervisor commands (`/learn`, `/submit`, `/progress`, `/enroll`, `/unenroll`, `/cert`, `/report`, `/gaps`, `/courses`, `/help`) -> `POST /webhook/supervisor`
 - Onboarding command (`/onboard`) -> `POST /webhook/onboard`
 - Events -> `POST /webhook/slack/events`
 - Interactivity -> `POST /webhook/slack-interactions`
@@ -24,4 +24,6 @@ In `n8n/workflows/supervisor-router.json`:
 - `/cert` -> agent 7 (Certification)
 - `/gaps` -> agent 9 (Gap Analyst)
 
-Legacy commands (`/submit`, `/complete`, `/feedback`, `/tutor`) are still accepted for backward compatibility.
+Legacy compatibility aliases are handled only inside workflow router logic (not registered as Slack slash commands):
+- `/quiz`, `/complete`, `/feedback`, `/tutor`
+- Mapping location: `workflows/Router.json` (`Parse Slack Payload` node) and `workflows/slack_supervisor.workflow.json` (`Switch by Command` node for `/quiz`).
