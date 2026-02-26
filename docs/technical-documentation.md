@@ -169,6 +169,8 @@ A release should only proceed if all are true:
 
 ## 7. Deployment Plan (End-User Ready)
 
+For the current production runtime procedure, follow the canonical deployment guide: [`DEPLOYMENT.md`](../DEPLOYMENT.md).
+
 ## 7.1 Environments
 - **Dev**: local docker-compose + sandbox Slack workspace.
 - **Staging**: production-like infra, test Slack workspace, full integration validation.

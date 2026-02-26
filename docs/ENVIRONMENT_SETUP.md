@@ -98,7 +98,7 @@ Reliability controls:
 ## 7) Production Deployment
 
 For full stack deployment (Docker Compose, reverse proxy, queue workers, hardening, backups), see:
-- `docs/DEPLOYMENT.md`
+- [`DEPLOYMENT.md`](../DEPLOYMENT.md)
 
 ## 8) Go-Live Checklist
 

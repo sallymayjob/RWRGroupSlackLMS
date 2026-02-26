@@ -1,3 +1,7 @@
+# ⚠️ Legacy Deployment Guide (Not Current Production Path)
+
+> **Warning:** This document is retained for historical reference only and does **not** define the current production runtime path. Use the canonical deployment guide at [`/DEPLOYMENT.md`](../DEPLOYMENT.md).
+
 # Deployment Guide (n8n + Slack LMS)
 
 This guide completes production deployment details for the Slack LMS n8n automation stack.

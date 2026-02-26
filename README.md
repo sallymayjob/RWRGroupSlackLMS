@@ -2,7 +2,7 @@
 
 A Slack-integrated Learning Management System powered by AI agents (n8n) for the RWR Group organisation.
 
-> For full installation instructions see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+> For full installation instructions, use the canonical production runtime guide: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 > Independent production readiness audit: **[docs/FULL_PRODUCTION_READINESS_REVIEW.md](./docs/FULL_PRODUCTION_READINESS_REVIEW.md)**.
 
@@ -125,7 +125,7 @@ make format    # Prettier
 make dev       # start with nodemon (hot-reload)
 ```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for production deployment, Nginx setup, n8n workflow import, and upgrade procedures.
+See the canonical [DEPLOYMENT.md](./DEPLOYMENT.md) guide for production deployment, Nginx setup, n8n workflow import, and upgrade procedures.
 
 ---
 
