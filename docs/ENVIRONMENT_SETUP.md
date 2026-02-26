@@ -112,7 +112,11 @@ For full stack deployment (Docker Compose, reverse proxy, queue workers, hardeni
 
 ## Database Schema Reference
 
-Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+Use `db/schema.sql` as the operational deploy-time schema baseline.
+
+For incremental updates after initial bootstrap, apply SQL files in `db/migrations/` in ascending version order (`V<version>__<description>.sql`).
+
+`data/lms_database_schema.sql` is legacy analytical/reference SQL and is not the deployment schema source.
 
 
 ## Content Architect Prompt Setup

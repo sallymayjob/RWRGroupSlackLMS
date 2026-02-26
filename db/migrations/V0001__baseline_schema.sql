@@ -1,7 +1,3 @@
--- DEPLOY-TIME CANONICAL OPERATIONAL SCHEMA
--- Use this file for new-environment bootstrap.
--- Apply post-bootstrap updates via db/migrations/.
-
 -- RWRGroup Agentic LMS — initial schema
 -- Run against the lms_db database to set up tables.
 
