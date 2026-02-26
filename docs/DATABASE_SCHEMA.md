@@ -1,7 +1,29 @@
 # Database Schema (Operational Layer)
 
-The canonical SQL schema is in:
-- `data/lms_database_schema.sql`
+## Canonical runtime schema
+
+Use `db/schema.sql` as the **deploy-time canonical schema** for the Slack LMS operational database.
+
+Apply it for:
+- new environment bootstrap
+- baseline schema validation in CI/CD
+- operational table/constraint/index review
+
+## Legacy/reference schema file
+
+`data/lms_database_schema.sql` is retained as a **legacy analytical/reference artifact**.
+It is not the deploy-time schema source and should not be used for production bootstrap.
+
+## Migration source of truth
+
+Schema evolution after baseline bootstrap is tracked under:
+- `db/migrations/`
+
+Migration versioning strategy:
+- Filename format: `V<version>__<description>.sql`
+- Example: `V0002__add_quiz_attempt_indexes.sql`
+- Versions are strictly increasing and never rewritten after deployment
+- `db/schema.sql` should be updated to reflect the latest accumulated migration state
 
 ## Core tables
 

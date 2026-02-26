@@ -1,3 +1,7 @@
+-- LEGACY/REFERENCE SCHEMA (non-deploy-time)
+-- This file is maintained for analytics/reference compatibility.
+-- Runtime deployment schema source of truth is db/schema.sql.
+
 -- LMS canonical operational schema (PostgreSQL)
 -- Aligns Slack command ingestion, Notion-authored content, learner state, and analytics.
 
