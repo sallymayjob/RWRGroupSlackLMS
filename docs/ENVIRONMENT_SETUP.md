@@ -29,15 +29,13 @@ Critical required values:
 - Slack, Notion, Gemini, Google, Email keys
 - Notion IDs: `NOTION_ROOT_PAGE_ID`, `NOTION_COURSES_DB_ID`, `NOTION_MONTHS_DB_ID`, `NOTION_LESSONS_DB_ID`
 
-## 3) Import Workflow JSON Files
+## 3) Import Workflow JSON Files (Canonical Path)
 
 1. In n8n, go to **Workflows → Import from File**.
-2. Import `workflows/slack_supervisor.workflow.json`.
-3. Import `workflows/slack_onboard.workflow.json`.
-4. Import `workflows/agent_subworkflow_template.workflow.json`.
-5. Duplicate template to create all 14 agent workflows.
-6. Set workflow names to match README agent map.
-7. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
+2. Import workflow files from `n8n/workflows/` (canonical source path).
+3. Import `n8n/workflows/supervisor-router.json` first.
+4. Import the remaining agent workflows from `n8n/workflows/` (see `DEPLOYMENT.md` section **8.1 Import workflows** for full order).
+5. Activate workflows after validating credentials and webhook URLs.
 
 ## 4) Credentials to Configure in n8n
 
