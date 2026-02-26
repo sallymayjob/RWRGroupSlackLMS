@@ -2,7 +2,7 @@
 
 A Slack-integrated Learning Management System powered by AI agents (n8n) for the RWR Group organisation.
 
-> For full installation instructions see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+> For full installation instructions see **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)**.
 
 > Independent production readiness audit: **[docs/FULL_PRODUCTION_READINESS_REVIEW.md](./docs/FULL_PRODUCTION_READINESS_REVIEW.md)**.
 
@@ -46,6 +46,26 @@ Slack API ──► This app (Bolt HTTP, port 3000)
 **Stack:** Node.js 20 · Slack Bolt v3 · PostgreSQL 16 · Redis 7 · n8n · Gemini
 
 ---
+
+## Repository Organization
+
+This repository is organized by runtime responsibility:
+
+- `src/` — Node.js Slack Bolt app (entrypoint, handlers, DB/cache services).
+- `db/` — deploy-time canonical schema (`db/schema.sql`) and versioned migrations (`db/migrations/`).
+- `n8n/` — n8n workflow JSON + reusable Code-node scripts.
+- `workflows/` — workflow export/import artifacts and payload examples.
+- `docs/` — canonical operational documentation (deployment, environment setup, schema, security reviews).
+- `tests/` — Jest unit/integration tests + Python QA regression/perf checks.
+- `reports/` — generated benchmark/QA outputs.
+
+### Canonical docs map
+
+- Deployment: `docs/DEPLOYMENT.md`
+- Environment setup: `docs/ENVIRONMENT_SETUP.md`
+- Database schema governance: `docs/DATABASE_SCHEMA.md`
+- Security posture/review: `docs/SECURITY_REVIEW.md`
+
 
 ## Agent Registry
 
@@ -125,7 +145,7 @@ make format    # Prettier
 make dev       # start with nodemon (hot-reload)
 ```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for production deployment, Nginx setup, n8n workflow import, and upgrade procedures.
+See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production deployment, Nginx setup, n8n workflow import, and upgrade procedures.
 
 ---
 

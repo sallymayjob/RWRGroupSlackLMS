@@ -1,64 +1,21 @@
-# Deployment Guide — RWRGroup Agentic LMS
+# Deployment Documentation Index
 
-This document covers everything needed to go from a blank server to a fully running LMS, including local development, production Docker deployment, Nginx reverse proxy, n8n workflow import, and upgrade procedures.
+This repository keeps **canonical deployment guidance under `docs/`**.
 
----
+Use the following in order:
 
-## Table of Contents
+1. `docs/ENVIRONMENT_SETUP.md` — required credentials, environment variables, and n8n prerequisites.
+2. `docs/DEPLOYMENT.md` — production deployment topology, workflow activation, hardening, and operations.
+3. `docs/DATABASE_SCHEMA.md` — canonical runtime schema (`db/schema.sql`) and migration/versioning strategy (`db/migrations/`).
 
-1. [Prerequisites](#1-prerequisites)
-2. [Create the Slack App](#2-create-the-slack-app)
-3. [Clone and Configure](#3-clone-and-configure)
-4. [Local Development](#4-local-development)
-5. [Production Deployment (Docker)](#5-production-deployment-docker)
-6. [Nginx Reverse Proxy](#6-nginx-reverse-proxy)
-7. [Database Schema](#7-database-schema)
-8. [n8n Workflow Import](#8-n8n-workflow-import)
-9. [Verify the Installation](#9-verify-the-installation)
-10. [Upgrading](#10-upgrading)
-11. [Troubleshooting](#11-troubleshooting)
+## Why this file exists
 
----
+Historically this repository had overlapping deployment guides in multiple locations.
+To remove ambiguity and keep documentation organized, this root file is now an index only.
 
-## 1. Prerequisites
-
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Node.js | ≥ 20 | LTS recommended |
-| npm | ≥ 10 | bundled with Node 20 |
-| Docker | ≥ 24 | for the full stack |
-| Docker Compose | v2 | `docker compose` (not `docker-compose`) |
-| PostgreSQL client | 16 | `psql` — for schema migration |
-| A public HTTPS URL | — | Slack requires HTTPS for event delivery; use a reverse proxy or a tunnel (e.g. ngrok) for local dev |
-| Slack workspace | — | Admin access to create and install an app |
-| n8n instance | ≥ 1.0 | Self-hosted or cloud; must be reachable from this app |
-
----
-
-## 2. Create the Slack App
-
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App**.
-2. Choose **From a manifest** and select your workspace.
-3. Paste the contents of `slack_manifest.json` from this repository.
-4. Replace every `https://YOUR_APP_URL` placeholder in the manifest with your public HTTPS URL (e.g. `https://lms.example.com`). The Bolt app listens on `/slack/events`.
-5. Click **Next → Create**.
-6. Under **Install App**, click **Install to Workspace** and approve the OAuth scopes.
-7. Copy the values you will need for `.env`:
-   - **Bot User OAuth Token** → `SLACK_BOT_TOKEN`
-   - **Signing Secret** (under *Basic Information*) → `SLACK_SIGNING_SECRET`
-
----
-
-## 3. Clone and Configure
+## Quick production bootstrap
 
 ```bash
-git clone <repo-url> RWRGroupSlackLMS
-cd RWRGroupSlackLMS
-
-# Install Node dependencies
-npm install
-
-# Create your local environment file
 cp .env.example .env
 ```
 
@@ -151,99 +108,6 @@ ngrok http 3000
 ```bash
 # On the production server, with .env populated
 docker compose -f docker-compose.yml up --build -d
-```
-
-Using `-f docker-compose.yml` explicitly skips the dev override file.
-
-### 5.2 Apply the database schema
-
-Run this once on first deploy (safe to re-run — all statements are `IF NOT EXISTS`):
-
-```bash
-docker compose exec postgres psql \
-  -U "$POSTGRES_USER" \
-  -d "$POSTGRES_DB" \
-  -f /dev/stdin < db/schema.sql
-```
-
-Or from the host if `psql` is installed:
-
-```bash
-psql "$DATABASE_URL" -f db/schema.sql
-```
-
-### 5.3 Service overview
-
-| Service | Image | Port | Notes |
-|---------|-------|------|-------|
-| `app` | local build | 3000 (internal) | Bolt HTTP app; exposed via Nginx |
-| `n8n` | `n8nio/n8n:1.107.4` | 127.0.0.1:5678 | loopback only; access via Nginx or SSH tunnel |
-| `postgres` | `postgres:16-alpine` | 127.0.0.1:5432 | loopback only |
-| `redis` | `redis:7-alpine` | 127.0.0.1:6379 | loopback only |
-
-### 5.4 Useful commands
-
-```bash
-# View running containers
-docker compose ps
-
-# Stream logs
-docker compose logs -f app
-
-# Restart the app only (after a code change)
-docker compose up --build -d app
-
-# Open a Postgres shell
-docker compose exec postgres psql -U lms_user -d lms_db
-```
-
----
-
-## 6. Nginx Reverse Proxy
-
-Place the provided config in your Nginx sites directory and enable it:
-
-```bash
-sudo cp nginx/lms.conf /etc/nginx/sites-available/lms
-sudo ln -s /etc/nginx/sites-available/lms /etc/nginx/sites-enabled/lms
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-Then obtain a TLS certificate (Slack **requires** HTTPS):
-
-```bash
-sudo certbot --nginx -d lms.example.com
-```
-
-The config at `nginx/lms.conf` includes:
-- HTTPS with HTTP→HTTPS redirect
-- Proxy to the Bolt app on port 3000
-- Rate limiting for Slack event ingestion
-- Gzip compression
-- Security headers
-
----
-
-## 7. Database Schema
-
-The schema lives in `db/schema.sql` and is idempotent (all `CREATE TABLE IF NOT EXISTS`). Tables created:
-
-| Table | Purpose |
-|-------|---------|
-| `users` | Slack user registry |
-| `courses` | Course catalogue |
-| `modules` | Lessons within each course |
-| `enrolments` | User–course enrolment records |
-| `progress` | Module completion records |
-| `certificates` | Issued certificates |
-| `quiz_attempts` | Full quiz history (pass/fail/score) |
-| `audit_log` | Append-only compliance event trail |
-| `notifications` | Outbound nudge DM log |
-| `course_tags` | Flexible course tagging |
-
-To apply:
-
-```bash
 psql "$DATABASE_URL" -f db/schema.sql
 ```
 

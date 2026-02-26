@@ -2,6 +2,14 @@
 
 This guide completes production deployment details for the Slack LMS n8n automation stack.
 
+## 0) Repository layout (for operations)
+
+- `src/`: Slack Bolt runtime service.
+- `db/schema.sql`: deploy-time canonical schema for new environments.
+- `db/migrations/`: ordered incremental schema changes (`V<version>__<description>.sql`).
+- `n8n/workflows/`: agent workflow definitions used by n8n.
+- `docs/`: canonical operating docs (this file, env setup, DB schema, security).
+
 ## 1) Deployment Topology
 
 Recommended production topology:
@@ -58,7 +66,7 @@ Set command Request URLs to:
 
 Commands:
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
 - `/cert`
@@ -66,7 +74,7 @@ Commands:
 - `/gaps`
 - `/onboard` (points to `https://<your-domain>/webhook/onboard`)
 
-Legacy commands (optional): `/submit`, `/complete`, `/feedback`, `/tutor`.
+Legacy commands (optional): `/complete`, `/feedback`, `/tutor`.
 
 Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)
