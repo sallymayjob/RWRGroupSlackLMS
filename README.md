@@ -4,6 +4,10 @@ A Slack-integrated Learning Management System powered by AI agents (n8n) for the
 
 > For full installation instructions see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
+> Independent production readiness audit: **[docs/FULL_PRODUCTION_READINESS_REVIEW.md](./docs/FULL_PRODUCTION_READINESS_REVIEW.md)**.
+
+> Codebase organization/conflict audit: **[docs/CODEBASE_ORGANIZATION_CONFLICT_AUDIT.md](./docs/CODEBASE_ORGANIZATION_CONFLICT_AUDIT.md)**.
+
 ---
 
 ## Architecture
