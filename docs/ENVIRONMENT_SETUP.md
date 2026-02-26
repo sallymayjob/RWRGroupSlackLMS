@@ -32,12 +32,11 @@ Critical required values:
 ## 3) Import Workflow JSON Files
 
 1. In n8n, go to **Workflows → Import from File**.
-2. Import `workflows/slack_supervisor.workflow.json`.
-3. Import `workflows/slack_onboard.workflow.json`.
-4. Import `workflows/agent_subworkflow_template.workflow.json`.
-5. Duplicate template to create all 14 agent workflows.
-6. Set workflow names to match README agent map.
-7. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
+2. Import the canonical workflow exports from `workflows/n8n-export/` (including supervisor router and agent workflows).
+3. Legacy workflow exports moved to `archive/workflows-legacy/` for reference only.
+4. Duplicate template to create all 14 agent workflows (if your n8n setup requires template cloning).
+5. Set workflow names to match README agent map.
+6. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
 
 ## 4) Credentials to Configure in n8n
 
@@ -51,7 +50,7 @@ Critical required values:
 
 Register manifest commands in your Slack app:
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
 - `/cert`
@@ -112,7 +111,11 @@ For full stack deployment (Docker Compose, reverse proxy, queue workers, hardeni
 
 ## Database Schema Reference
 
-Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+Use `db/schema.sql` as the operational deploy-time schema baseline.
+
+For incremental updates after initial bootstrap, apply SQL files in `db/migrations/` in ascending version order (`V<version>__<description>.sql`).
+
+`data/lms_database_schema.sql` is legacy analytical/reference SQL and is not the deployment schema source.
 
 
 ## Content Architect Prompt Setup

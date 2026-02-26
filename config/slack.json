@@ -1,0 +1,4 @@
+{
+  "commands": ["/learn", "/submit", "/progress", "/enroll", "/unenroll", "/cert", "/report", "/gaps", "/courses", "/help", "/onboard", "/backup"],
+  "events": ["app_mention", "message.im"]
+}
