@@ -13,7 +13,8 @@
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
     "deploy": "node scripts/deploy.js",
     "db:migrate": "node scripts/migrate.js",
-    "workflows:backup": "node scripts/backupWorkflows.js"
+    "workflows:backup": "node scripts/backupWorkflows.js",
+    "check:env-docs": "node scripts/check-env-docs.js"
   },
   "keywords": [
     "slack",

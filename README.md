@@ -50,18 +50,18 @@ bash infrastructure/hostinger/deploy.sh
 
 ## Environment Variables
 
-Required:
+<!-- REQUIRED_ENV_VARS_START -->
+Required at startup (app exits if missing):
 - `NODE_ENV=production`
 - `PORT=3000`
 - `SLACK_BOT_TOKEN`
 - `SLACK_SIGNING_SECRET`
 - `N8N_BASE_URL`
+- `N8N_WEBHOOK_SECRET`
 - `DATABASE_URL`
 - `REDIS_URL`
 - `LOG_LEVEL=info`
-
-Recommended:
-- `N8N_WEBHOOK_SECRET`
+<!-- REQUIRED_ENV_VARS_END -->
 
 ## Backup and Restore
 

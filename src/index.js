@@ -4,7 +4,14 @@ const { requiredEnv, appConfig } = require('./utils/configLoader');
 const logger = require('./utils/logger');
 
 // ── Startup environment validation ───────────────────────────────────────────
-const REQUIRED_ENV = ['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'DATABASE_URL', 'REDIS_URL', 'N8N_BASE_URL'];
+const REQUIRED_ENV = [
+  'SLACK_BOT_TOKEN',
+  'SLACK_SIGNING_SECRET',
+  'DATABASE_URL',
+  'REDIS_URL',
+  'N8N_BASE_URL',
+  'N8N_WEBHOOK_SECRET',
+];
 requiredEnv(REQUIRED_ENV);
 
 const { App, ExpressReceiver } = require('@slack/bolt');

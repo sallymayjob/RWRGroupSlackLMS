@@ -38,13 +38,8 @@
  *   N8N_RETRY_LIMIT     — max retry attempts on 5xx/network error (default: 2)
  */
 
-const ROUTES = {
-  supervisor: "/webhook/supervisor",
-  onboard: "/webhook/onboard",
-  backup: "/webhook/backup",
-  "slack-interactions": "/webhook/slack-interactions",
-  "slack-events": "/webhook/slack/events",
-};
+const ROUTES = require('../n8n/helpers/routes');
+const logger = require('../utils/logger');
 
 function parseIntEnv(value, fallback, { min = 0 } = {}) {
   if (value == null) return fallback;
@@ -79,7 +74,7 @@ async function forwardToN8n(workflow, payload) {
   if (!route) throw new Error(`Unknown n8n workflow: ${workflow}`);
 
   if (!base) {
-    console.warn("N8N_BASE_URL is not set; skipping n8n forwarding.");
+    logger.warn("N8N_BASE_URL is not set; skipping n8n forwarding.");
     return;
   }
 
@@ -144,7 +139,7 @@ async function forwardToN8n(workflow, payload) {
 
     // Retry on server errors; don't retry client errors
     if (res && res.status < 500) {
-      console.error(`n8n ${workflow} responded ${res.status} — not retrying`);
+      logger.error(`n8n ${workflow} responded ${res.status} — not retrying`);
       return;
     }
 
@@ -152,11 +147,11 @@ async function forwardToN8n(workflow, payload) {
       lastError = new Error(`n8n ${workflow} responded ${res.status} ${res.statusText}`);
     }
 
-    console.warn(`n8n forward attempt ${attempt + 1} failed: ${lastError.message}`);
+    logger.warn(`n8n forward attempt ${attempt + 1} failed: ${lastError.message}`);
   }
 
   // All retries exhausted — log and surface the error to the caller
-  console.error(`n8n forward to ${workflow} failed after ${RETRY_LIMIT + 1} attempts:`, lastError.message);
+  logger.error(`n8n forward to ${workflow} failed after ${RETRY_LIMIT + 1} attempts:`, lastError.message);
   throw lastError;
 }
 

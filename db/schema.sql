@@ -1,3 +1,8 @@
+-- CANONICAL SCHEMA — single source of truth.
+-- Applied by CI (ci.yml) and referenced in DEPLOYMENT.md.
+-- Post-bootstrap updates go in db/migrations/ only.
+-- Do NOT maintain a copy elsewhere in this repository.
+
 -- DEPLOY-TIME CANONICAL OPERATIONAL SCHEMA
 -- Use this file for new-environment bootstrap.
 -- Apply post-bootstrap updates via db/migrations/.

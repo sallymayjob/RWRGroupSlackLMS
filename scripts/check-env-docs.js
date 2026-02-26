@@ -14,7 +14,7 @@ function parseRequiredEnvFromSource(content) {
   const match = content.match(/const\s+REQUIRED_ENV\s*=\s*\[(.*?)\];/s);
   if (!match) fail('Could not find REQUIRED_ENV array in src/index.js');
 
-  const vars = [...match[1].matchAll(/"([A-Z0-9_]+)"/g)].map((m) => m[1]);
+  const vars = [...match[1].matchAll(/['"]([A-Z0-9_]+)['"]/g)].map((m) => m[1]);
   if (vars.length === 0) fail('REQUIRED_ENV array exists but no env vars were parsed.');
   return vars;
 }

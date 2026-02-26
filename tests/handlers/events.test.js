@@ -1,14 +1,14 @@
-jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
 
 describe("events handler", () => {
   let registered;
 
   beforeEach(() => {
     jest.resetModules();
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
     registered = [];
     const fakeApp = { event: (name) => registered.push(name) };
-    require("../../src/handlers/events")(fakeApp);
+    require("../../src/slack/events")(fakeApp);
   });
 
   it("registers app_mention event", () => {
@@ -27,10 +27,10 @@ describe("events handler — behavior", () => {
   beforeEach(() => {
     jest.resetModules();
     mockForward = jest.fn().mockResolvedValue(undefined);
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: mockForward }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: mockForward }));
     eventHandlers = {};
     const fakeApp = { event: (name, fn) => { eventHandlers[name] = fn; } };
-    require("../../src/handlers/events")(fakeApp);
+    require("../../src/slack/events")(fakeApp);
   });
 
   it("app_mention forwards to supervisor with type:app_mention spread into payload", async () => {
@@ -69,15 +69,19 @@ describe("events handler — behavior", () => {
     expect(mockForward).not.toHaveBeenCalled();
   });
 
-  it("app_mention swallows forwardToN8n errors", async () => {
+  it("app_mention responds via say and does not propagate errors to Bolt", async () => {
     mockForward.mockRejectedValue(new Error("n8n down"));
     const event = { user: "U123", text: "hello" };
-    await expect(eventHandlers["app_mention"]({ event })).resolves.toBeUndefined();
+    const say = jest.fn().mockResolvedValue(undefined);
+    await expect(eventHandlers["app_mention"]({ event, say })).resolves.toBeUndefined();
+    expect(say).toHaveBeenCalledWith(expect.stringContaining("could not process"));
   });
 
-  it("message.im swallows forwardToN8n errors", async () => {
+  it("message.im responds via say and does not propagate errors to Bolt", async () => {
     mockForward.mockRejectedValue(new Error("n8n down"));
     const event = { channel_type: "im", user: "U123", text: "hi" };
-    await expect(eventHandlers["message"]({ event })).resolves.toBeUndefined();
+    const say = jest.fn().mockResolvedValue(undefined);
+    await expect(eventHandlers["message"]({ event, say })).resolves.toBeUndefined();
+    expect(say).toHaveBeenCalledWith(expect.stringContaining("could not process"));
   });
 });
