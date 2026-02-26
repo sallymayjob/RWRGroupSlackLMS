@@ -11,17 +11,18 @@ This project is aligned to your provided Slack manifest.
 - Events -> `POST /webhook/slack/events`
 - Interactivity -> `POST /webhook/slack-interactions`
 
+## n8n workflow import path (canonical)
+- Import workflows from `n8n/workflows/` only.
+- Do not use legacy `workflows/*.workflow.json` files for new deployments.
+
 ## n8n routing alignment
-In `src/handlers/commands.js` (source of truth):
-- `/learn` -> supervisor workflow
-- `/submit` -> supervisor workflow
-- `/progress` and `/report` -> supervisor workflow
-- `/enroll` and `/unenroll` -> supervisor workflow
-- `/cert` -> supervisor workflow
-- `/gaps` -> supervisor workflow
-- `/courses` and `/help` -> supervisor workflow
-- `/onboard` -> onboard workflow
-- `/backup` -> backup workflow
+In `n8n/workflows/supervisor-router.json`:
+- `/learn` -> agent 3 (Tutor)
+- `/quiz` -> agent 2 (Quiz Master)
+- `/progress` and `/report` -> agent 12 (Reporting)
+- `/enroll` -> agent 8 (Enrollment)
+- `/cert` -> agent 7 (Certification)
+- `/gaps` -> agent 9 (Gap Analyst)
 
 Legacy compatibility aliases are handled only inside workflow router logic (not registered as Slack slash commands):
 - `/quiz`, `/complete`, `/feedback`, `/tutor`

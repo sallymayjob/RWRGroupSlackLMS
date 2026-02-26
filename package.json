@@ -11,7 +11,7 @@
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
-    "check:docs-commands": "node scripts/check-documented-commands.js"
+    "check:env-docs": "node scripts/check-env-docs.js"
   },
   "keywords": [
     "slack",
