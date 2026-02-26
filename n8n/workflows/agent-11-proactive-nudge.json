@@ -95,7 +95,7 @@
                     "type": "plain_text",
                     "text": "Resume Lesson"
                   },
-                  "value": "={{ String($json.lesson_id || \"\") }}"
+                  "value": "={{ JSON.stringify({ lesson_id: $json.lesson_id, user_id: $json.slack_user_id, course_title: $json.course_title }) }}"
                 },
                 {
                   "type": "button",
@@ -124,6 +124,39 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a11000000-0000-0000-0000-000000000010",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a11000000-0000-0000-0000-000000000005",
+      "name": "DM Sent OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO notifications (user_id, notification_type, message)\nSELECT u.id, 'nudge', 'Nudged about course: ' || $2\nFROM users u WHERE u.slack_user_id = $1;",
         "options": {
@@ -135,8 +168,31 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        720,
-        0
+        960,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO audit_log (event_type, user_id, metadata)\nSELECT 'nudge_delivery_failed', u.id,\n  json_build_object('course_title', $2, 'slack_error', $3)::text\nFROM users u WHERE u.slack_user_id = $1;",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.slack_user_id, $json.course_title, $json.error || 'ok:false']) }}"
+        }
+      },
+      "id": "a11000000-0000-0000-0000-000000000006",
+      "name": "Log Delivery Failure",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        120
       ],
       "credentials": {
         "postgres": {
@@ -173,7 +229,25 @@
       "main": [
         [
           {
+            "node": "DM Sent OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DM Sent OK?": {
+      "main": [
+        [
+          {
             "node": "Log Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Delivery Failure",
             "type": "main",
             "index": 0
           }

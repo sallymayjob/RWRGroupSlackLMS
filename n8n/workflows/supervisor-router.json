@@ -265,7 +265,9 @@
           ]
         },
         "looseTypeValidation": true,
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
@@ -573,8 +575,31 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO audit_log (event_type, user_id, metadata)\nVALUES ('unrouted_command', $1, $2);",
+        "options": {
+          "queryParameters": "={{ JSON.stringify([$json.user_id || '', JSON.stringify({ command: $json.command, text: $json.text })]) }}"
+        }
+      },
+      "id": "fb000000-0000-0000-0000-000000000001",
+      "name": "Log Unrouted Command",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -2800,
+        3184
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-creds",
+          "name": "LMS Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"team_id\": \"{{ $json.team_id || '' }}\",\n  \"team_domain\": \"{{ $json.team_domain || '' }}\",\n\n  \"channel_id\": \"{{ $json.channel_id || '' }}\",\n  \"channel_name\": \"{{ $json.channel_name || '' }}\",\n\n  \"user_id\": \"{{ $json.user_id || '' }}\",\n  \"user_name\": \"{{ $json.user_name || '' }}\",\n\n  \"command\": \"{{ $json.command || '' }}\",\n  \"text\": \"{{ $json.text || '' }}\",\n\n  \"lesson\": {{ Number(($json.text || '').split(' ')[1] || 0) }},\n\n  \"response_url\": \"{{ $json.response_url || '' }}\",\n  \"trigger_id\": \"{{ $json.trigger_id || '' }}\",\n  \"api_app_id\": \"{{ $json.api_app_id || '' }}\",\n  \"is_enterprise_install\": {{ $json.is_enterprise_install || false }},\n\n  \"raw_headers\": {{ JSON.stringify($json.raw_headers || {}) }},\n  \"raw_params\": {{ JSON.stringify($json.raw_params || {}) }},\n  \"raw_query\": {{ JSON.stringify($json.raw_query || {}) }}\n}\n",
+        "jsonOutput": "={\n  \"team_id\": \"{{ $json.team_id || '' }}\",\n  \"team_domain\": \"{{ $json.team_domain || '' }}\",\n\n  \"channel_id\": \"{{ $json.channel_id || '' }}\",\n  \"channel_name\": \"{{ $json.channel_name || '' }}\",\n\n  \"user_id\": \"{{ $json.user_id || '' }}\",\n  \"user_name\": \"{{ $json.user_name || '' }}\",\n\n  \"command\": \"{{ $json.command || '' }}\",\n  \"text\": \"{{ $json.text || '' }}\",\n\n  \"lesson\": {{ Number(($json.text || '').split(' ')[0] || 0) }},\n\n  \"response_url\": \"{{ $json.response_url || '' }}\",\n  \"trigger_id\": \"{{ $json.trigger_id || '' }}\",\n  \"api_app_id\": \"{{ $json.api_app_id || '' }}\",\n  \"is_enterprise_install\": {{ $json.is_enterprise_install || false }},\n\n  \"raw_headers\": {{ JSON.stringify($json.raw_headers || {}) }},\n  \"raw_params\": {{ JSON.stringify($json.raw_params || {}) }},\n  \"raw_query\": {{ JSON.stringify($json.raw_query || {}) }}\n}\n",
         "includeOtherFields": true,
         "options": {}
       },
@@ -807,6 +832,13 @@
         [
           {
             "node": "Call 'Agent 10 \u2014 Unenroll'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Unrouted Command",
             "type": "main",
             "index": 0
           }
