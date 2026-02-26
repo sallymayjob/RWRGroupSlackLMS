@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notion Database — Critique & Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-alt: #F5F3EF;
+    --border: #E8E5DE;
+    --border-dark: #D4D0C8;
+    --text: #1A1A1A;
+    --text-dim: #6B6B6B;
+    --text-muted: #9B9B9B;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --red-border: #FECACA;
+    --green: #059669;
+    --green-bg: #ECFDF5;
+    --green-border: #A7F3D0;
+    --orange: #D97706;
+    --orange-bg: #FFFBEB;
+    --orange-border: #FDE68A;
+    --blue: #2563EB;
+    --blue-bg: #EFF6FF;
+    --blue-border: #BFDBFE;
+    --purple: #7C3AED;
+    --purple-bg: #F5F3FF;
+    --purple-border: #DDD6FE;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--text);
+  }
+  .header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    font-size: 16px;
+    color: var(--text-dim);
+  }
+
+  /* ─── Section ─── */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section p {
+    font-size: 15px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    max-width: 720px;
+  }
+
+  /* ─── Audit Table ─── */
+  .audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .audit-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .audit-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .audit-table tr:last-child td { border-bottom: none; }
+  .audit-table .db-name {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .audit-table .db-rows {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ─── Verdict Tags ─── */
+  .verdict {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .v-kill { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .v-keep { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .v-redesign { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+  .v-new { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .v-merge { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+  /* ─── Issue Cards ─── */
+  .issues {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .issue {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .issue-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    padding-top: 2px;
+  }
+  .issue-body h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .issue-body p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 0;
+  }
+  .issue--warn { border-left-color: var(--orange); }
+  .issue--warn .issue-num { color: var(--orange); }
+
+  /* ─── Comparison Block ─── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .compare-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .compare-col h4 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .compare-col.bad { border-top: 3px solid var(--red); }
+  .compare-col.good { border-top: 3px solid var(--green); }
+
+  /* ─── Tree View (Notion structure) ─── */
+  .tree {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 2;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tree .t-page { color: var(--text); font-weight: 600; }
+  .tree .t-db { color: var(--blue); font-weight: 500; }
+  .tree .t-kill { color: var(--red); text-decoration: line-through; opacity: 0.6; }
+  .tree .t-new { color: var(--green); font-weight: 600; }
+  .tree .t-dim { color: var(--text-muted); }
+  .tree .indent { padding-left: 24px; }
+  .tree .indent2 { padding-left: 48px; }
+  .tree .indent3 { padding-left: 72px; }
+
+  /* ─── Schema Cards ─── */
+  .schema-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .schema-header {
+    padding: 14px 18px;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .schema-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .schema-header .schema-icon {
+    font-size: 18px;
+  }
+  .schema-purpose {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+    font-style: italic;
+  }
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .schema-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 18px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .schema-table td {
+    padding: 7px 18px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    vertical-align: top;
+  }
+  .schema-table tr:last-child td { border-bottom: none; }
+  .schema-table .prop-name {
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .schema-table .prop-type {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .schema-table .prop-note {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .schema-table .prop-required {
+    color: var(--red);
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .schema-table .prop-relation {
+    color: var(--blue);
+    font-weight: 500;
+    font-size: 11px;
+  }
+
+  /* ─── Callout ─── */
+  .callout {
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: start;
+  }
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout-red { background: var(--red-bg); border: 1px solid var(--red-border); }
+  .callout-green { background: var(--green-bg); border: 1px solid var(--green-border); }
+  .callout-blue { background: var(--blue-bg); border: 1px solid var(--blue-border); }
+  .callout-orange { background: var(--orange-bg); border: 1px solid var(--orange-border); }
+
+  /* ─── Relationship Diagram ─── */
+  .rel-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .rel-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .rel-box {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid;
+    min-width: 120px;
+  }
+  .rel-box.primary { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }
+  .rel-box.secondary { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .rel-box.tertiary { background: var(--orange-bg); border-color: var(--orange-border); color: var(--orange); }
+  .rel-box.support { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple); }
+  .rel-arrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .rel-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    margin-bottom: 12px;
+  }
+
+  /* ─── Score ─── */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .score-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .score-box .score-val {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .score-box .score-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .score-bad { color: var(--red); }
+  .score-ok { color: var(--orange); }
+  .score-good { color: var(--green); }
+
+  /* ─── List ─── */
+  .clean-list {
+    list-style: none;
+    font-size: 13px;
+    line-height: 2;
+  }
+  .clean-list li::before {
+    content: '→';
+    margin-right: 8px;
+    color: var(--text-muted);
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ════════════════════════════════════════════ HEADER ════════════════════════════════════════════ -->
+<div class="header">
+  <div class="eyebrow">Slack LMS — Notion Audit</div>
+  <h1>Database Critique &amp; Redesign</h1>
+  <div class="subtitle">Aligning your Notion workspace to the clean 5-layer architecture. Everything below is actionable.</div>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 1: CURRENT STATE ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 01</div>
+  <h2>What's Currently in Notion</h2>
+
+  <p>Your Notion workspace has 6 phase pages, 8 databases, and a project health dashboard. Here's every database audited against the architecture.</p>
+
+  <table class="audit-table">
+    <tr>
+      <th>Database</th>
+      <th>Rows</th>
+      <th>Purpose (Current)</th>
+      <th>Architecture Role</th>
+      <th>Verdict</th>
+    </tr>
+    <tr>
+      <td class="db-name">📚 Course Registry</td>
+      <td class="db-rows">8</td>
+      <td>Tracks courses (COURSE-001 to 008), lesson counts, audience, status</td>
+      <td>CMS master table — needed, but schema is wrong</td>
+      <td><span class="verdict v-redesign">REDESIGN</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">📖 Lessons Registry</td>
+      <td class="db-rows">4</td>
+      <td>Tracks individual lessons with ID, status, tags</td>
+      <td>Core content table — but nearly empty and wrong format</td>
+      <td><span class="verdict v-redesign">REDESIGN</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">⚙️ Workflow Registry</td>
+      <td class="db-rows">6</td>
+      <td>Maps WF-001 to WF-006 with triggers, outputs</td>
+      <td>Useful reference, but entries are outdated</td>
+      <td><span class="verdict v-redesign">REDESIGN</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">📁 File Registry</td>
+      <td class="db-rows">17</td>
+      <td>Tracks SOPs, specs, guides with phase/status</td>
+      <td>Admin overhead — not CMS. No learner touches this.</td>
+      <td><span class="verdict v-merge">MERGE</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">🔴 Gaps Registry</td>
+      <td class="db-rows">10</td>
+      <td>Tracks P0/P1 gaps with cost, hours, owner</td>
+      <td>Premature. Estimating costs before validation.</td>
+      <td><span class="verdict v-kill">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">📡 Channel Registry</td>
+      <td class="db-rows">10</td>
+      <td>Maps Slack channels to purpose, courses, WFs</td>
+      <td>Should be auto-derived from Course structure</td>
+      <td><span class="verdict v-kill">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">📋 Assignments Registry</td>
+      <td class="db-rows">?</td>
+      <td>Referenced in root page but not in export</td>
+      <td>Merge into Module/Lesson concept</td>
+      <td><span class="verdict v-merge">MERGE</span></td>
+    </tr>
+    <tr>
+      <td class="db-name">📚 Resources Library</td>
+      <td class="db-rows">?</td>
+      <td>Referenced in root page but not in export</td>
+      <td>Merge into Weekly Hub pages</td>
+      <td><span class="verdict v-merge">MERGE</span></td>
+    </tr>
+  </table>
+
+  <div class="score-grid">
+    <div class="score-box">
+      <div class="score-val score-bad">8</div>
+      <div class="score-label">Databases (too many)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val score-bad">6</div>
+      <div class="score-label">Phase pages (all hollow)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val score-bad">4</div>
+      <div class="score-label">Lessons written (of 375)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val score-bad">0</div>
+      <div class="score-label">Follow ULC format</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 2: CRITICAL ISSUES ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 02</div>
+  <h2>Critical Issues (10 Problems)</h2>
+
+  <div class="issues">
+    <div class="issue">
+      <div class="issue-num">01</div>
+      <div class="issue-body">
+        <h4>Phase pages are hollow shells</h4>
+        <p>All 6 pages (01-Initiation through 06-Curriculum-Library) contain identical content — just a nav bar linking to the same databases. They occupy space without adding structure or value. This is project management theater, not content organization.</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-num">02</div>
+      <div class="issue-body">
+        <h4>Course Registry doesn't match the 12-month architecture</h4>
+        <p>COURSE-004 = "Month 1" (28 days), COURSE-005 = "Months 2-3" (60 days), COURSE-006 = "Months 4-6" (90 days). Sometimes 1 month = 1 course, sometimes 3 months = 1 course. This makes it impossible to map to the clean <code>current_month = 1-12</code> model in Firestore.</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-num">03</div>
+      <div class="issue-body">
+        <h4>Lessons don't follow ULC format</h4>
+        <p>Your lesson pages use Goal / Key Topics / Activity / Quick Check. But your own Universal Lesson Canvas defines Objective / Core Content / Mission / Verification. The standard you designed isn't in your database.</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-num">04</div>
+      <div class="issue-body">
+        <h4>No Month → Module → Lesson hierarchy</h4>
+        <p>The architecture defines Months containing Modules containing Lessons. The Notion DB has flat courses with flat lessons. There's no way to tell which lesson belongs to which module or which month. The <code>checkProgression()</code> function needs this structure to work.</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-num">05</div>
+      <div class="issue-body">
+        <h4>Workflow Registry uses killed patterns</h4>
+        <p>WF-002 triggers on "9 AM scheduler" — a time-based delay we explicitly eliminated. WF-004 triggers on "Course completion" but doesn't match the 4-workflow architecture (Course Launcher, Module Engine, Progression Checker, Utility Shortcuts). These entries will confuse anyone reading them.</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-num">06</div>
+      <div class="issue-body">
+        <h4>Dashboard numbers don't reconcile</h4>
+        <p>"7% content completion — 24 of 375 lessons written." But the Lessons Registry has 4 entries, and 3 of them are Notion training placeholders ("Databases 101", "Relations: Link Lessons to Assignments"). These aren't real recruiter training lessons. The dashboard tells a story the data doesn't support.</p>
+      </div>
+    </div>
+
+    <div class="issue issue--warn">
+      <div class="issue-num">07</div>
+      <div class="issue-body">
+        <h4>Gaps Registry is premature optimization</h4>
+        <p>$6,248 budgeted for gaps like "HRIS Integration" ($385) and "Assessment System" ($550) — with 0 learners tested and 0 lessons validated. You're budgeting for Phase 3 before finishing Week 1. This creates anxiety without driving action.</p>
+      </div>
+    </div>
+
+    <div class="issue issue--warn">
+      <div class="issue-num">08</div>
+      <div class="issue-body">
+        <h4>Channel Registry is manual duplication</h4>
+        <p>10 channels manually tracked. But channel names follow a pattern (<code>#course-{id}-{name}</code>) that should be auto-derived from the Course Registry. This is a sync bug waiting to happen.</p>
+      </div>
+    </div>
+
+    <div class="issue issue--warn">
+      <div class="issue-num">09</div>
+      <div class="issue-body">
+        <h4>File Registry is admin overhead, not CMS</h4>
+        <p>17 entries tracking deployment guides, technical specs, and SOPs. Learners never see this. It's useful for you, but it doesn't belong alongside curriculum databases. It pollutes the workspace with non-learning content.</p>
+      </div>
+    </div>
+
+    <div class="issue issue--warn">
+      <div class="issue-num">10</div>
+      <div class="issue-body">
+        <h4>No Prompt Library, Brand Config, or Weekly Hub</h4>
+        <p>The architecture defined three critical Notion components — a 150-prompt library converted to "Mission Generators," brand configuration per client, and one weekly hub page per module. None of these exist yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ════════════════════════════════════════════ SECTION 3: THE REDESIGN ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 03</div>
+  <h2>Redesigned Notion Structure</h2>
+
+  <p>Notion's role in the architecture is <strong>Layer 04 — Backend CMS</strong>. It stores curriculum, brand configs, and prompt tools. Learners rarely open it. Admins use it to manage content that gets pushed to Slack via Cloud Functions.</p>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">🎯</div>
+    <div><strong>Design principle:</strong> Every Notion database must answer a question the system needs. If Slack or Firestore already answers it, Notion shouldn't store it. Notion = content authoring. Firestore = learner state. Slack = delivery.</div>
+  </div>
+
+  <div class="compare">
+    <div class="compare-col bad">
+      <h4>🔴 Current (8 databases, 6 phases)</h4>
+      <ul class="clean-list">
+        <li>Course Registry (wrong month grouping)</li>
+        <li>Lessons Registry (4 rows, wrong format)</li>
+        <li>Workflow Registry (outdated triggers)</li>
+        <li>File Registry (admin overhead)</li>
+        <li>Gaps Registry (premature)</li>
+        <li>Channel Registry (manual sync)</li>
+        <li>Assignments Registry (ghost)</li>
+        <li>Resources Library (ghost)</li>
+        <li>6 hollow phase pages</li>
+      </ul>
+    </div>
+    <div class="compare-col good">
+      <h4>🟢 Redesigned (5 databases, 3 sections)</h4>
+      <ul class="clean-list">
+        <li><strong>Courses</strong> (master, 1 row per course)</li>
+        <li><strong>Months</strong> (12 per course, structured)</li>
+        <li><strong>Lessons</strong> (ULC format, linked to months)</li>
+        <li><strong>Prompt Library</strong> (mission generators)</li>
+        <li><strong>System Log</strong> (workflows + admin ref)</li>
+        <li>Brand Config page (per client)</li>
+        <li>Weekly Hub template (per month)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ NEW TREE ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 04</div>
+  <h2>New Notion Page Structure</h2>
+
+  <div class="tree">
+    <div class="t-page">📚 Slack LMS</div>
+    <div class="indent">
+      <div class="t-page">📌 Dashboard</div>
+      <div class="indent2 t-dim">↳ Course progress (formula rollup from Months DB)</div>
+      <div class="indent2 t-dim">↳ This week's focus (manual, 3 items max)</div>
+      <div class="indent2 t-dim">↳ Quick links to active month pages</div>
+    </div>
+    <div class="indent" style="margin-top:8px;">
+      <div class="t-page">📖 Curriculum</div>
+      <div class="indent2"><span class="t-db">🗄️ Courses DB</span> <span class="t-dim">— master registry, 1 row per course</span></div>
+      <div class="indent2"><span class="t-db">🗄️ Months DB</span> <span class="t-dim">— 12 rows per course, module structure</span></div>
+      <div class="indent2"><span class="t-db">🗄️ Lessons DB</span> <span class="t-dim">— ULC format, linked to month</span></div>
+      <div class="indent2"><span class="t-new">📄 Weekly Hub Template</span> <span class="t-dim">— clone per month for multimodal</span></div>
+    </div>
+    <div class="indent" style="margin-top:8px;">
+      <div class="t-page">🧰 Tools</div>
+      <div class="indent2"><span class="t-db">🗄️ Prompt Library DB</span> <span class="t-dim">— 150 prompts as mission generators</span></div>
+      <div class="indent2"><span class="t-new">📄 Brand Config</span> <span class="t-dim">— tone, voice, visual identity per client</span></div>
+      <div class="indent2"><span class="t-new">📄 ULC Canvas Template</span> <span class="t-dim">— frozen standard (Objective/Content/Mission/Verification)</span></div>
+    </div>
+    <div class="indent" style="margin-top:8px;">
+      <div class="t-page">⚙️ System</div>
+      <div class="indent2"><span class="t-db">🗄️ System Log DB</span> <span class="t-dim">— workflows, admin docs, decisions</span></div>
+      <div class="indent2 t-dim">↳ Replaces: Workflow Registry + File Registry (merged)</div>
+    </div>
+    <div class="indent" style="margin-top:12px;color:var(--red);opacity:0.5;">
+      <div><s>🚀 01-Initiation</s> — killed</div>
+      <div><s>🧪 02-Test-Phase</s> — killed</div>
+      <div><s>⚙️ 03-Execution-System</s> — killed</div>
+      <div><s>📊 04-Monitoring</s> — killed</div>
+      <div><s>✅ 05-Completion</s> — killed</div>
+      <div><s>📖 06-Curriculum-Library</s> — killed</div>
+      <div><s>🔴 Gaps Registry</s> — killed (use dashboard todos)</div>
+      <div><s>📡 Channel Registry</s> — killed (auto-derived)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 5: DATABASE SCHEMAS ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 05</div>
+  <h2>Database Schemas (Exact Properties)</h2>
+
+  <p>Every property below maps to something the system actually reads or writes. No vanity columns.</p>
+
+  <!-- DB 1: Courses -->
+  <div class="schema-card">
+    <div class="schema-header">
+      <span class="schema-icon">📚</span>
+      <h3>Courses</h3>
+      <span class="verdict v-redesign">REDESIGNED</span>
+    </div>
+    <div class="schema-purpose">Master course table. One row per deployable course. Replaces old Course Registry with consistent structure.</div>
+    <table class="schema-table">
+      <tr><th>Property</th><th>Type</th><th>Notes</th></tr>
+      <tr>
+        <td class="prop-name">Course ID</td>
+        <td class="prop-type">Title</td>
+        <td class="prop-note"><span class="prop-required">PK</span> — Format: <code>COURSE_12M</code> (one per program)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Title</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note">Human name, e.g. "RWR 12-Month Recruiter Training"</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Audience</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Recruiters | Managers | General | Creators</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Total Months</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">Always 12 for the primary course</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Months</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Months DB</span></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Status</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Draft | Writing | Review | Live | Archived</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Content Completion</td>
+        <td class="prop-type">Rollup</td>
+        <td class="prop-note">% of months where all lessons are "Ready"</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Slack Channel Pattern</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note"><code>#course-{id}-month{n}</code> — no separate Channel Registry needed</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Brand Config</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note">Link to brand page (tone, voice, logo) — supports multi-client later</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- DB 2: Months -->
+  <div class="schema-card">
+    <div class="schema-header">
+      <span class="schema-icon">📅</span>
+      <h3>Months</h3>
+      <span class="verdict v-new">NEW</span>
+    </div>
+    <div class="schema-purpose">One row per month per course. This is the missing hierarchy. Maps 1:1 to Firestore's <code>current_month</code> field and the Progression Checker logic.</div>
+    <table class="schema-table">
+      <tr><th>Property</th><th>Type</th><th>Notes</th></tr>
+      <tr>
+        <td class="prop-name">Month ID</td>
+        <td class="prop-type">Title</td>
+        <td class="prop-note"><span class="prop-required">PK</span> — Format: <code>M01</code> through <code>M12</code></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Course</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Courses DB</span></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Month Number</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">1–12. This is what Firestore reads.</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Title</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note">e.g. "Foundations of Recruiting" — learner-facing</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Theme</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note">Monthly learning focus for content coherence</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Lessons</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Lessons DB</span></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Modules Count</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">Typically 4 (Week 1-4). Maps to Firestore <code>current_module</code> 0-3</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Daily Lessons</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">Micro-lessons per week (default: 5)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Weekly Hub Link</td>
+        <td class="prop-type">URL</td>
+        <td class="prop-note">Link to Notion hub page for deep session (video/slides/quiz)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Status</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Empty | Outlined | Writing | Review | Ready</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Lesson Completion</td>
+        <td class="prop-type">Rollup</td>
+        <td class="prop-note">% of lessons in "Ready" status</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- DB 3: Lessons -->
+  <div class="schema-card">
+    <div class="schema-header">
+      <span class="schema-icon">📝</span>
+      <h3>Lessons</h3>
+      <span class="verdict v-redesign">REDESIGNED</span>
+    </div>
+    <div class="schema-purpose">Every lesson follows ULC format. This is the actual content table that Cloud Functions read to post Slack threads. One lesson = one Slack thread.</div>
+    <table class="schema-table">
+      <tr><th>Property</th><th>Type</th><th>Notes</th></tr>
+      <tr>
+        <td class="prop-name">Lesson ID</td>
+        <td class="prop-type">Title</td>
+        <td class="prop-note"><span class="prop-required">PK</span> — Format: <code>M01-W1-L01</code> (Month 1, Week 1, Lesson 1)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Month</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Months DB</span></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Week</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">1–4 (maps to module number in Firestore)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Day</td>
+        <td class="prop-type">Number</td>
+        <td class="prop-note">1–5 (Mon–Fri within the week)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Type</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note"><strong>Daily Micro</strong> (5-min text) | <strong>Weekly Deep</strong> (30-min multimodal)</td>
+      </tr>
+      <tr style="background: var(--blue-bg);">
+        <td class="prop-name">📌 Objective</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note"><span class="prop-required">ULC</span> — What the learner will achieve</td>
+      </tr>
+      <tr style="background: var(--blue-bg);">
+        <td class="prop-name">📌 Core Content</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note"><span class="prop-required">ULC</span> — Minimum 500 words for micro-lessons</td>
+      </tr>
+      <tr style="background: var(--blue-bg);">
+        <td class="prop-name">📌 Mission</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note"><span class="prop-required">ULC</span> — Action or reflection. Include recommended prompt from Prompt Library.</td>
+      </tr>
+      <tr style="background: var(--blue-bg);">
+        <td class="prop-name">📌 Verification</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note"><span class="prop-required">ULC</span> — How completion is proven. Alignment-based, not recall.</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Prompt</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Prompt Library DB</span> — Linked mission generator</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Slack Thread Text</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note">Pre-formatted Slack message (what the bot actually posts)</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Status</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Empty | Draft | SOP-5 Review | Ready | Live</td>
+      </tr>
+      <tr>
+        <td class="prop-name">SOP-5 Validated</td>
+        <td class="prop-type">Checkbox</td>
+        <td class="prop-note">Passed Course GPT + SOP-5 validation pipeline</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- DB 4: Prompt Library -->
+  <div class="schema-card">
+    <div class="schema-header">
+      <span class="schema-icon">💡</span>
+      <h3>Prompt Library</h3>
+      <span class="verdict v-new">NEW</span>
+    </div>
+    <div class="schema-purpose">Your 150 prompts, converted from a static list to active "Mission Generators" embedded into lessons. Each prompt becomes a learning tool, not just a reference.</div>
+    <table class="schema-table">
+      <tr><th>Property</th><th>Type</th><th>Notes</th></tr>
+      <tr>
+        <td class="prop-name">Prompt ID</td>
+        <td class="prop-type">Title</td>
+        <td class="prop-note"><span class="prop-required">PK</span> — Format: <code>P-001</code> through <code>P-150</code></td>
+      </tr>
+      <tr>
+        <td class="prop-name">Prompt Text</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note">The actual prompt learners use</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Category</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Sourcing | Screening | Client Mgmt | Closing | Mindset | etc.</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Skill Level</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Beginner | Intermediate | Advanced</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Example Output</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note">What a good response looks like — copy-paste reference</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Linked Lessons</td>
+        <td class="prop-type">Relation</td>
+        <td class="prop-note"><span class="prop-relation">→ Lessons DB</span> — Which lessons use this prompt</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Usage Count</td>
+        <td class="prop-type">Rollup</td>
+        <td class="prop-note">How many lessons reference this prompt (avoid orphans)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- DB 5: System Log -->
+  <div class="schema-card">
+    <div class="schema-header">
+      <span class="schema-icon">⚙️</span>
+      <h3>System Log</h3>
+      <span class="verdict v-merge">MERGED</span>
+    </div>
+    <div class="schema-purpose">Merges Workflow Registry + File Registry. One table for all admin/system reference. Not learner-facing. Keeps admin docs organized without polluting curriculum space.</div>
+    <table class="schema-table">
+      <tr><th>Property</th><th>Type</th><th>Notes</th></tr>
+      <tr>
+        <td class="prop-name">Entry ID</td>
+        <td class="prop-type">Title</td>
+        <td class="prop-note">Format: <code>WF-A</code>, <code>WF-B</code>, <code>DOC-001</code>, etc.</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Type</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Workflow | SOP | Spec | Decision | Reference</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Name</td>
+        <td class="prop-type">Text</td>
+        <td class="prop-note">Human name</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Description</td>
+        <td class="prop-type">Long Text</td>
+        <td class="prop-note">What it does, trigger, output — in the page body</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Status</td>
+        <td class="prop-type">Select</td>
+        <td class="prop-note">Active | Deprecated | Planned</td>
+      </tr>
+      <tr>
+        <td class="prop-name">Last Updated</td>
+        <td class="prop-type">Date</td>
+        <td class="prop-note">Auto last-edited</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 6: RELATIONSHIPS ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 06</div>
+  <h2>How the Databases Connect</h2>
+
+  <div class="rel-diagram">
+    <div class="rel-label">NOTION CMS RELATIONSHIPS (Layer 04)</div>
+    <div class="rel-row">
+      <div class="rel-box primary">📚 Courses</div>
+      <div class="rel-arrow">1 → many</div>
+      <div class="rel-box secondary">📅 Months</div>
+      <div class="rel-arrow">1 → many</div>
+      <div class="rel-box tertiary">📝 Lessons</div>
+    </div>
+    <div style="margin: 16px 0; color: var(--text-muted);">│</div>
+    <div class="rel-row">
+      <div class="rel-box tertiary">📝 Lessons</div>
+      <div class="rel-arrow">many ← 1</div>
+      <div class="rel-box support">💡 Prompts</div>
+    </div>
+    <div style="margin: 20px 0;"></div>
+    <div class="rel-label">MAPS TO FIRESTORE (Layer 03)</div>
+    <div class="rel-row">
+      <div class="rel-box primary" style="background:#FEF2F2;border-color:#FECACA;color:#DC2626;">Courses.ID</div>
+      <div class="rel-arrow">= Firestore</div>
+      <div class="rel-box" style="background:#F5F5F5;border-color:#D4D4D4;color:#525252;font-size:11px;min-width:200px;">learners/{userId}.course_id</div>
+    </div>
+    <div class="rel-row" style="margin-top:4px;">
+      <div class="rel-box primary" style="background:#FEF2F2;border-color:#FECACA;color:#DC2626;">Months.Number</div>
+      <div class="rel-arrow">= Firestore</div>
+      <div class="rel-box" style="background:#F5F5F5;border-color:#D4D4D4;color:#525252;font-size:11px;min-width:200px;">learners/{userId}.current_month</div>
+    </div>
+    <div class="rel-row" style="margin-top:4px;">
+      <div class="rel-box primary" style="background:#FEF2F2;border-color:#FECACA;color:#DC2626;">Lessons.Week</div>
+      <div class="rel-arrow">= Firestore</div>
+      <div class="rel-box" style="background:#F5F5F5;border-color:#D4D4D4;color:#525252;font-size:11px;min-width:200px;">learners/{userId}.current_module</div>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div><strong>This is the key alignment.</strong> Notion's Month Number maps directly to Firestore's <code>current_month</code>. Notion's Week maps to Firestore's <code>current_module</code>. When <code>checkProgression()</code> fires, it reads Firestore, but the content it pulls comes from Notion's Lessons DB via this ID structure. One source of content. One source of state. No duplication.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 7: MIGRATION ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 07</div>
+  <h2>Migration Steps (Do This Week)</h2>
+
+  <div class="callout callout-orange">
+    <div class="callout-icon">⚠️</div>
+    <div><strong>Do not delete the old databases yet.</strong> Archive them into a "Legacy" page, then build the new structure alongside. Switch over once verified.</div>
+  </div>
+
+  <table class="audit-table">
+    <tr>
+      <th>Step</th>
+      <th>Action</th>
+      <th>Time</th>
+    </tr>
+    <tr>
+      <td class="db-name">1</td>
+      <td>Create <strong>📖 Curriculum</strong> section with Courses, Months, Lessons databases using schemas above</td>
+      <td class="db-rows">1 hr</td>
+    </tr>
+    <tr>
+      <td class="db-name">2</td>
+      <td>Create 1 Course row (<code>COURSE_12M</code>) and 12 Month rows (<code>M01</code>–<code>M12</code>) with themes for the RWR program</td>
+      <td class="db-rows">30 min</td>
+    </tr>
+    <tr>
+      <td class="db-name">3</td>
+      <td>Migrate the 4 existing lessons into new Lessons DB, rewriting them in ULC format (Objective / Content / Mission / Verification)</td>
+      <td class="db-rows">1 hr</td>
+    </tr>
+    <tr>
+      <td class="db-name">4</td>
+      <td>Create <strong>🧰 Tools</strong> section. Build Prompt Library DB, add first 20 prompts as Mission Generators with example outputs</td>
+      <td class="db-rows">2 hr</td>
+    </tr>
+    <tr>
+      <td class="db-name">5</td>
+      <td>Create <strong>⚙️ System</strong> section. Build System Log DB with the 4 canonical workflows (WF-A through WF-D) using correct triggers</td>
+      <td class="db-rows">30 min</td>
+    </tr>
+    <tr>
+      <td class="db-name">6</td>
+      <td>Create Brand Config page (tone, voice, Slack message style, emoji rules)</td>
+      <td class="db-rows">30 min</td>
+    </tr>
+    <tr>
+      <td class="db-name">7</td>
+      <td>Create 1 Weekly Hub page for Month 1 Week 1 (video embed + slides + quiz link). This is the deep session template.</td>
+      <td class="db-rows">1 hr</td>
+    </tr>
+    <tr>
+      <td class="db-name">8</td>
+      <td>Archive all 6 phase pages + Gaps Registry + Channel Registry into a <strong>🗃️ Legacy</strong> page</td>
+      <td class="db-rows">15 min</td>
+    </tr>
+    <tr>
+      <td class="db-name">9</td>
+      <td>Rebuild Dashboard using rollups from new Courses → Months → Lessons chain (real numbers, not guesses)</td>
+      <td class="db-rows">30 min</td>
+    </tr>
+  </table>
+
+  <p><strong>Total estimated time: ~7 hours.</strong> Do steps 1–3 on Day 1, steps 4–6 on Day 2, steps 7–9 on Day 3.</p>
+</div>
+
+<!-- ════════════════════════════════════════════ SECTION 8: CONTENT LESSON ID SYSTEM ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-num">Part 08</div>
+  <h2>Lesson ID Convention (Critical for Automation)</h2>
+
+  <p>Every lesson needs a deterministic ID that Cloud Functions can parse to know exactly where in the 12-month journey it sits.</p>
+
+  <div class="tree" style="line-height: 2.2;">
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">L01</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Lesson 1 (Monday micro)</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">L02</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Lesson 2 (Tuesday micro)</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">L03</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Lesson 3 (Wednesday micro)</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">L04</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Lesson 4 (Thursday micro)</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">L05</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Lesson 5 (Friday micro)</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W1</span>-<span style="color:var(--orange);font-weight:600;">DEEP</span> &nbsp; <span class="t-dim">= Month 1, Week 1, Weekly Deep Session (hub link)</span></div>
+    <div style="margin-top:4px;"><span class="t-dim">───</span></div>
+    <div><span style="color:var(--blue);font-weight:600;">M01</span>-<span style="color:var(--green);font-weight:600;">W2</span>-<span style="color:var(--orange);font-weight:600;">L01</span> &nbsp; <span class="t-dim">= Month 1, Week 2, Lesson 1 ...</span></div>
+    <div style="color: var(--text-muted);">... (20 daily + 4 deep = 24 lessons per month × 12 months = <strong style="color:var(--text);">288 total lessons</strong>)</div>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">💡</div>
+    <div><strong>This replaces your 375 lesson estimate.</strong> The math: 12 months × 4 weeks × (5 daily + 1 deep) = 288 structured lessons. This is achievable. 375 was inflated because months were grouped inconsistently (some had 28 days, some 90). With consistent 4-week months, the number becomes real and trackable.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ FOOTER ════════════════════════════════════════════ -->
+<div class="footer">
+  Slack LMS — Notion Database Redesign &nbsp;·&nbsp; February 2026 &nbsp;·&nbsp; Aligned to 5-Layer Clean Architecture &nbsp;·&nbsp; 5 databases, 0 ghost tables, 0 hollow pages
+</div>
+
+</div>
+</body>
+</html>
