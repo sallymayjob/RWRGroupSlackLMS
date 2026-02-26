@@ -1,11 +1,11 @@
-function log(level, ...args) {
+function log(level, consoleMethod, ...args) {
   const ts = new Date().toISOString();
   // eslint-disable-next-line no-console
-  console[level](`[${ts}]`, ...args);
+  console[consoleMethod](`[${ts}] [${level}]`, ...args);
 }
 
 module.exports = {
-  info: (...args) => log('log', ...args),
-  warn: (...args) => log('warn', ...args),
-  error: (...args) => log('error', ...args),
+  info:  (...args) => log('info',  'log',   ...args),
+  warn:  (...args) => log('warn',  'warn',  ...args),
+  error: (...args) => log('error', 'error', ...args),
 };

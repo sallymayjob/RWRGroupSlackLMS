@@ -13,7 +13,7 @@ describe("n8n service", () => {
   });
 
   it("POSTs to the supervisor endpoint for known workflows", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await forwardToN8n("supervisor", { command: "/learn" });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -23,7 +23,7 @@ describe("n8n service", () => {
   });
 
   it("POSTs to the onboard endpoint", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await forwardToN8n("onboard", { command: "/onboard" });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -34,13 +34,13 @@ describe("n8n service", () => {
 
   it("skips forwarding when N8N_BASE_URL is not set", async () => {
     delete process.env.N8N_BASE_URL;
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await forwardToN8n("supervisor", {});
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("throws on unknown workflow", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await expect(forwardToN8n("unknown-workflow", {})).rejects.toThrow(
       "Unknown n8n workflow: unknown-workflow"
     );
@@ -48,7 +48,7 @@ describe("n8n service", () => {
 
   it("normalises trailing slash in N8N_BASE_URL", async () => {
     process.env.N8N_BASE_URL = "https://example.com/";
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await forwardToN8n("supervisor", { command: "/learn" });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -59,7 +59,7 @@ describe("n8n service", () => {
 
   it("preserves path prefixes in N8N_BASE_URL", async () => {
     process.env.N8N_BASE_URL = "https://example.com/n8n";
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     await forwardToN8n("supervisor", { command: "/learn" });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -70,7 +70,7 @@ describe("n8n service", () => {
 
   it("rejects non-http N8N_BASE_URL values", async () => {
     process.env.N8N_BASE_URL = "file:///tmp/n8n";
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
 
     await expect(forwardToN8n("supervisor", {})).rejects.toThrow(
       "Invalid N8N_BASE_URL: Unsupported protocol for N8N_BASE_URL: file:"
@@ -103,7 +103,7 @@ describe("n8n service — regression", () => {
   // ── Routing ───────────────────────────────────────────────────────────────
 
   it("POSTs to /webhook/backup", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("backup", { command: "/backup" });
     await jest.runAllTimersAsync();
     await p;
@@ -114,7 +114,7 @@ describe("n8n service — regression", () => {
   });
 
   it("POSTs to /webhook/slack-interactions", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("slack-interactions", { type: "action" });
     await jest.runAllTimersAsync();
     await p;
@@ -125,7 +125,7 @@ describe("n8n service — regression", () => {
   });
 
   it("POSTs to /webhook/slack/events", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("slack-events", { type: "app_mention" });
     await jest.runAllTimersAsync();
     await p;
@@ -138,7 +138,7 @@ describe("n8n service — regression", () => {
   // ── Request shape ─────────────────────────────────────────────────────────
 
   it("serialises the payload as a JSON body", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const payload = { command: "/learn", text: "3", user_id: "U123" };
     const p = forwardToN8n("supervisor", payload);
     await jest.runAllTimersAsync();
@@ -148,7 +148,7 @@ describe("n8n service — regression", () => {
   });
 
   it("sets Content-Type: application/json", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("supervisor", {});
     await jest.runAllTimersAsync();
     await p;
@@ -158,7 +158,7 @@ describe("n8n service — regression", () => {
 
   it("sends X-Webhook-Secret header when N8N_WEBHOOK_SECRET is set", async () => {
     process.env.N8N_WEBHOOK_SECRET = "supersecret";
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("supervisor", {});
     await jest.runAllTimersAsync();
     await p;
@@ -168,7 +168,7 @@ describe("n8n service — regression", () => {
 
   it("omits X-Webhook-Secret header when N8N_WEBHOOK_SECRET is not set", async () => {
     delete process.env.N8N_WEBHOOK_SECRET;
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("supervisor", {});
     await jest.runAllTimersAsync();
     await p;
@@ -183,7 +183,7 @@ describe("n8n service — regression", () => {
       .mockResolvedValueOnce({ ok: false, status: 503, statusText: "Service Unavailable" })
       .mockResolvedValueOnce({ ok: true });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("supervisor", {});
     await jest.runAllTimersAsync();
     await p;
@@ -198,7 +198,7 @@ describe("n8n service — regression", () => {
       statusText: "Bad Request",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const p = forwardToN8n("supervisor", {});
     await jest.runAllTimersAsync();
     await p;
@@ -213,7 +213,7 @@ describe("n8n service — regression", () => {
       statusText: "Internal Server Error",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     // Attach rejection handler BEFORE advancing timers to avoid unhandledRejection
     const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
     await jest.runAllTimersAsync();
@@ -230,7 +230,7 @@ describe("n8n service — regression", () => {
       statusText: "Internal Server Error",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
     await jest.runAllTimersAsync();
     await assertion;
@@ -247,7 +247,7 @@ describe("n8n service — regression", () => {
       statusText: "Internal Server Error",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
     await jest.runAllTimersAsync();
     await assertion;
@@ -264,7 +264,7 @@ describe("n8n service — regression", () => {
       statusText: "Internal Server Error",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
     await jest.runAllTimersAsync();
     await assertion;
@@ -281,7 +281,7 @@ describe("n8n service — regression", () => {
       statusText: "Internal Server Error",
     });
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("500");
     await jest.runAllTimersAsync();
     await assertion;
@@ -296,7 +296,7 @@ describe("n8n service — regression", () => {
 
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
     try {
-      const { forwardToN8n } = require("../../src/services/n8n");
+      const { forwardToN8n } = require("../../src/services/n8nService");
       const p = forwardToN8n("supervisor", {});
       await jest.runAllTimersAsync();
       await p;
@@ -313,7 +313,7 @@ describe("n8n service — regression", () => {
 
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
     try {
-      const { forwardToN8n } = require("../../src/services/n8n");
+      const { forwardToN8n } = require("../../src/services/n8nService");
       const p = forwardToN8n("supervisor", {});
       await jest.runAllTimersAsync();
       await p;
@@ -329,7 +329,7 @@ describe("n8n service — regression", () => {
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
 
     try {
-      const { forwardToN8n } = require("../../src/services/n8n");
+      const { forwardToN8n } = require("../../src/services/n8nService");
       const assertion = expect(forwardToN8n("supervisor", {})).rejects.toThrow("n8n down");
       await jest.runAllTimersAsync();
       await assertion;
@@ -343,7 +343,7 @@ describe("n8n service — regression", () => {
 
   it("throws when payload exceeds configured size limit", async () => {
     process.env.N8N_MAX_PAYLOAD_BYTES = "1024";
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const bigPayload = { data: "x".repeat(1100) };
 
     await expect(forwardToN8n("supervisor", bigPayload)).rejects.toThrow(
@@ -353,7 +353,7 @@ describe("n8n service — regression", () => {
   });
 
   it("throws a clear error for non-serializable payloads", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const circular = {};
     circular.self = circular;
 

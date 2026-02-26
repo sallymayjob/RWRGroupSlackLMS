@@ -1,4 +1,5 @@
 const { Pool } = require("pg");
+const logger = require('../../utils/logger');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -6,13 +7,13 @@ const pool = new Pool({
 
 // Surface idle client errors so the process doesn't crash silently
 pool.on("error", (err) => {
-  console.error("Unexpected Postgres pool error:", err.message);
+  logger.error("Unexpected Postgres pool error:", err.message);
 });
 
 async function connect() {
   const client = await pool.connect();
   client.release();
-  console.log("Connected to Postgres");
+  logger.info("Connected to Postgres");
 }
 
 async function query(text, params) {

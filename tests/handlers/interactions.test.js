@@ -1,4 +1,4 @@
-jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
 
 describe("interactions handler", () => {
   let actionHandlers;
@@ -8,14 +8,14 @@ describe("interactions handler", () => {
   beforeEach(() => {
     jest.resetModules();
     mockForward = jest.fn().mockResolvedValue(undefined);
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: mockForward }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: mockForward }));
     actionHandlers = [];
     viewHandlers = [];
     const fakeApp = {
       action: (pattern, fn) => actionHandlers.push({ pattern, fn }),
       view: (pattern, fn) => viewHandlers.push({ pattern, fn }),
     };
-    require("../../src/handlers/interactions")(fakeApp);
+    require("../../src/slack/handlers/interactions")(fakeApp);
   });
 
   // ── Registration ──────────────────────────────────────────────────────────

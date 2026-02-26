@@ -17,3 +17,15 @@ npm run db:migrate
 ```bash
 bash infrastructure/hostinger/deploy.sh
 ```
+
+## Required Environment Variables
+
+<!-- REQUIRED_ENV_VARS_START -->
+These must be set before starting the application:
+- `SLACK_BOT_TOKEN`
+- `SLACK_SIGNING_SECRET`
+- `N8N_BASE_URL`
+- `N8N_WEBHOOK_SECRET`
+- `DATABASE_URL`
+- `REDIS_URL`
+<!-- REQUIRED_ENV_VARS_END -->

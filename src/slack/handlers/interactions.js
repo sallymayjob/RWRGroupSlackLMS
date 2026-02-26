@@ -5,7 +5,8 @@
  *
  * @param {import('@slack/bolt').App} app
  */
-const { forwardToN8n } = require("../../services/n8n");
+const { forwardToN8n } = require("../../services/n8nService");
+const logger = require('../../utils/logger');
 
 module.exports = function registerInteractions(app) {
   // Block Kit button actions
@@ -14,7 +15,7 @@ module.exports = function registerInteractions(app) {
     try {
       await forwardToN8n("slack-interactions", { type: "action", action, body });
     } catch (err) {
-      console.error("action forward to slack-interactions failed:", err.message);
+      logger.error("action forward to slack-interactions failed:", err.message);
     }
   });
 
@@ -24,7 +25,7 @@ module.exports = function registerInteractions(app) {
     try {
       await forwardToN8n("slack-interactions", { type: "view_submission", view, body });
     } catch (err) {
-      console.error("view_submission forward to slack-interactions failed:", err.message);
+      logger.error("view_submission forward to slack-interactions failed:", err.message);
     }
   });
 };
