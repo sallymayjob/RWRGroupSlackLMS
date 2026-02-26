@@ -9,9 +9,6 @@ This project is designed for **n8n workflow automation** with production-ready e
 - Redis (required for queue mode workers)
 - Slack app with slash commands + webhook access
 - Gemini API key
-- Notion integration + database ID(s)
-- Workspace root page: `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
-- LM Data Table backend (API/DB)
 - Google service account with sheet access
 - Email provider for admin reporting
 
@@ -19,101 +16,90 @@ This project is designed for **n8n workflow automation** with production-ready e
 
 1. Copy `.env.example` to `.env`
 2. Fill all secrets and URLs
-3. Generate a strong `N8N_ENCRYPTION_KEY`
+3. Generate a strong `N8N_ENCRYPTION_KEY` (`openssl rand -hex 32`)
 
 Critical required values:
 - `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`
 - `N8N_EDITOR_BASE_URL`, `N8N_SECURE_COOKIE=true`
+- `N8N_ENCRYPTION_KEY` — **CRITICAL**: if lost, all stored credentials are unrecoverable
 - `DB_POSTGRESDB_*`
 - `QUEUE_BULL_REDIS_*`
-- Slack, Notion, Gemini, Google, Email keys
-- Notion IDs: `NOTION_ROOT_PAGE_ID`, `NOTION_COURSES_DB_ID`, `NOTION_MONTHS_DB_ID`, `NOTION_LESSONS_DB_ID`
+- Slack, Gemini, Google, Email keys
 
 ## 3) Import Workflow JSON Files
 
 1. In n8n, go to **Workflows → Import from File**.
-2. Import `workflows/slack_supervisor.workflow.json`.
-3. Import `workflows/slack_onboard.workflow.json`.
-4. Import `workflows/agent_subworkflow_template.workflow.json`.
-5. Duplicate template to create all 14 agent workflows.
-6. Set workflow names to match README agent map.
-7. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
+2. Import in this order:
+   1. `n8n/workflows/supervisor-router.json` — central command router
+   2. `n8n/workflows/agent-13-onboarding-agent.json` — onboard flow
+   3. `n8n/workflows/agent-14-backup-to-sheets.json` — backup flow
+   4. `n8n/workflows/agent-02-quiz-master.json` through `agent-15-assignment-intake.json` — all 13 sub-agents
+3. Update `Execute Workflow` node references if workflow names/IDs differ after import.
+
+See `docs/SLACK_MANIFEST_INTEGRATION.md` for the full command → agent routing map.
 
 ## 4) Credentials to Configure in n8n
 
-- Slack OAuth2 / Bot Token
-- Notion API credentials
-- Google Sheets service account credentials
+- Slack Bot Token / Signing Secret
+- Google Sheets service account credentials (`Google Sheets (LMS Backup)`)
+- LMS Postgres connection (`LMS Postgres`)
 - Gemini API credentials (HTTP Request or AI node)
 - SMTP/API email credentials
 
 ## 5) Slack Command Configuration
 
-Register manifest commands in your Slack app:
+All 12 commands are registered in `slack_manifest.json`. Apply the manifest via the Slack UI or Slack CLI.
+
+Supervisor route (`https://<your-domain>/webhook/supervisor`):
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
+- `/unenroll`
 - `/cert`
 - `/report`
 - `/gaps`
-- `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+- `/courses`
+- `/help`
 
-Legacy commands are still accepted for compatibility: `/submit`, `/complete`, `/feedback`, `/tutor`.
+Dedicated routes:
+- `/onboard` → `https://<your-domain>/webhook/onboard`
+- `/backup` → `https://<your-domain>/webhook/backup`
 
-Set command Request URL:
-- `https://<your-domain>/webhook/supervisor`
+See `slack_manifest.json` (root) as the source of truth for all command definitions and OAuth scopes.
 
+## 6) Data Reliability Controls
 
-## 5A) Notion Workspace Binding (Your Database)
+Maintain write order across integrations:
+1. PostgreSQL (primary)
+2. Google Sheets (backup)
 
-Use your provided workspace URL as the canonical root:
-- `NOTION_WORKSPACE_URL=https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
-
-Set these values in `.env`:
-- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
-- `NOTION_COURSES_DB_ID=<courses_db_id>`
-- `NOTION_MONTHS_DB_ID=<months_db_id>`
-- `NOTION_LESSONS_DB_ID=<lessons_db_id>`
-
-How to extract a DB ID in Notion:
-1. Open the database as a full page.
-2. Copy link.
-3. Use the 32-char ID from URL tail (remove hyphens if needed).
-4. Paste into `.env` and n8n credentials/config nodes.
-
-## 6) Data Sync Guardrails
-
-Maintain write order:
-1. Notion
-2. LM Data Table
-3. Google Sheets
-
-Reliability controls:
-- Idempotency key: `source:entity_id:version`
-- Retries with backoff
-- Dead-letter queue for persistent failures
-- Audit log entry for each agent action
+Reliability controls built into n8n workflows:
+- Retries with backoff on HTTP nodes
+- Dead-letter handling for persistent failures
+- Audit log entry for each agent action (`audit_log` table)
 
 ## 7) Production Deployment
 
 For full stack deployment (Docker Compose, reverse proxy, queue workers, hardening, backups), see:
-- `docs/DEPLOYMENT.md`
+- `DEPLOYMENT.md` (root) — comprehensive full-stack guide
+- `docs/DEPLOYMENT.md` — n8n workflow deployment supplement
 
 ## 8) Go-Live Checklist
 
-- All workflows imported and activated
-- Slack commands verified end-to-end
-- Agent 4 (`/submit`, `/complete`) state checks validated
-- Friday quiz + assessment schedule configured
+- All workflows imported and activated in n8n
+- Slack manifest applied; all 12 commands verified end-to-end
+- Supervisor Switch routes tested for each command
+- Proactive nudge schedule (Mon–Fri 09:00 UTC) confirmed active
+- `/backup` nightly schedule (2am UTC) confirmed active
 - Certification + manager/admin notifications enabled
 - Reporting workflow updates dashboard successfully
 
-
 ## Database Schema Reference
 
-Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
-
+Apply both schema files before first launch (see `docs/DATABASE_SCHEMA.md` for full details):
+- `db/schema.sql` — runtime app schema (users, enrolments, modules, progress, nudges, assignments)
+- `data/lms_database_schema.sql` — content/operational schema (learners, lessons, lesson_progress, agent_audit_logs)
 
 ## Content Architect Prompt Setup
 

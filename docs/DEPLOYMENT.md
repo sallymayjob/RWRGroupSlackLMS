@@ -19,7 +19,6 @@ Use `.env.example` as baseline. Critical values:
 - `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`
 - `N8N_ENCRYPTION_KEY`
 - `DB_TYPE`, `DB_POSTGRESDB_*`
-- `NOTION_WORKSPACE_URL`, `NOTION_ROOT_PAGE_ID`, `NOTION_*_DB_ID`
 - `QUEUE_BULL_REDIS_*`
 - `N8N_DIAGNOSTICS_ENABLED=false`
 - `N8N_PERSONALIZATION_ENABLED=false`
@@ -80,31 +79,25 @@ Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)
 - Signing secret validation in workflow logic
 
-## 5A) Notion Workspace IDs
-
-Use your root page URL:
-- `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
-
-Wire these env vars and workflow constants before activating:
-- `NOTION_ROOT_PAGE_ID=30558a9ec642819785c7d39dbce75ef1`
-- `NOTION_COURSES_DB_ID`
-- `NOTION_MONTHS_DB_ID`
-- `NOTION_LESSONS_DB_ID`
-
 ## 6) n8n Workflow Deployment Steps
 
-1. Import `workflows/slack_supervisor.workflow.json`
-2. Import `workflows/slack_onboard.workflow.json`
-3. Import `workflows/agent_subworkflow_template.workflow.json`
-4. Clone template into all agent workflows (1–14)
-5. Update `Execute Workflow` references
-6. Configure credentials:
-   - Slack
-   - Notion
-   - Google Sheets
-   - Gemini (HTTP Request)
-   - SMTP/Email provider
-7. Activate workflows
+Import in this order via **n8n → Workflows → Import from File**:
+
+1. `n8n/workflows/supervisor-router.json` — central command router
+2. `n8n/workflows/agent-13-onboarding-agent.json` — `/onboard` flow
+3. `n8n/workflows/agent-14-backup-to-sheets.json` — `/backup` flow
+4. All remaining agent workflows (`agent-02-*.json` through `agent-15-*.json`)
+5. `n8n/workflows/agent-11-proactive-nudge.json` — scheduled nudge
+
+After import:
+- Update `Execute Workflow` node references if IDs changed
+- Configure credentials:
+  - `LMS Postgres` (Postgres connection)
+  - `Google Sheets (LMS Backup)` (Google Sheets OAuth2)
+  - Gemini API (HTTP Request node)
+  - Slack Bot Token / Signing Secret
+  - SMTP/Email provider
+- Activate all workflows
 
 ## 7) Scheduling Jobs
 
