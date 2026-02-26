@@ -65,4 +65,26 @@ describe("supervisor-router workflow", () => {
 
     expect(commandLiterals).not.toContain("=/learn");
   });
+
+  it("Switch has fallbackOutput:extra so unrecognised payloads are not silently dropped", () => {
+    const workflow = loadWorkflow();
+    const switchNode = workflow.nodes.find((node) => node.type === "n8n-nodes-base.switch");
+    expect(switchNode.parameters.options.fallbackOutput).toBe("extra");
+  });
+
+  it("fallback output connects to Log Unrouted Command audit node", () => {
+    const workflow = loadWorkflow();
+    // Switch main outputs: indices 0-10 are the 11 named routes; index 11 is the fallback extra
+    const switchConnections = workflow.connections["Switch"].main;
+    const fallbackOutput = switchConnections[switchConnections.length - 1];
+    expect(fallbackOutput).toBeDefined();
+    expect(fallbackOutput[0].node).toBe("Log Unrouted Command");
+  });
+
+  it("lesson integer is extracted from text[0] not text[1] (C-1 fix)", () => {
+    const workflow = loadWorkflow();
+    const editFieldsNode = workflow.nodes.find((node) => node.name === "Edit Fields");
+    expect(editFieldsNode.parameters.jsonOutput).toContain("split(' ')[0]");
+    expect(editFieldsNode.parameters.jsonOutput).not.toContain("split(' ')[1]");
+  });
 });

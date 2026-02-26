@@ -13,7 +13,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
-      - N8N_BASE_URL=${N8N_BASE_URL:-https://n8n.srv1371300.hstgr.cloud}
+      - N8N_BASE_URL=${N8N_BASE_URL}
       - N8N_WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
@@ -35,6 +35,11 @@ services:
       - "127.0.0.1:5678:5678"
     environment:
       - N8N_SECURE_COOKIE=true
+      # Required: persist across container recreations — without this n8n generates
+      # a random key on every start and all stored credentials become unreadable.
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      # Required: public base URL so n8n builds correct webhook URLs behind a proxy.
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres

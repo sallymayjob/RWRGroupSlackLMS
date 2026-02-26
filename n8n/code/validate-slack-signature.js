@@ -45,8 +45,10 @@ function run({ $input, $env }) {
     valid = false;
   }
 
-  const body = raw.body || {};
-  return [{ json: { valid, response_url: body.response_url || "", user_id: body.user_id || "" } }];
+  // Spread raw so all webhook fields (body, headers, rawBody) are available
+  // to downstream nodes — matches the deployed inline Code node behaviour.
+  // Downstream n8n nodes access user_id via $json.body.user_id.
+  return [{ json: { valid, ...raw } }];
 }
 
 module.exports = { run };

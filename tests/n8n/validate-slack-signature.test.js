@@ -54,7 +54,7 @@ describe("Validate Slack Signature — valid requests", () => {
     expect(result.json.valid).toBe(true);
   });
 
-  it("passes user_id and response_url through from the body", () => {
+  it("passes body (containing user_id and response_url) through in the result", () => {
     const timestamp = freshTimestamp();
     const $input = makeInput({
       rawBody: RAW_BODY,
@@ -67,8 +67,10 @@ describe("Validate Slack Signature — valid requests", () => {
 
     const [result] = run({ $input, $env: { SLACK_SIGNING_SECRET: SECRET } });
 
-    expect(result.json.user_id).toBe("U999");
-    expect(result.json.response_url).toBe("https://hooks.slack.com/commands/xyz");
+    // The full raw payload is spread into the result so downstream nodes can
+    // access all webhook fields. user_id / response_url live under body.
+    expect(result.json.body.user_id).toBe("U999");
+    expect(result.json.body.response_url).toBe("https://hooks.slack.com/commands/xyz");
   });
 
   it("accepts an empty rawBody (no slash-command parameters)", () => {
@@ -200,7 +202,7 @@ describe("Validate Slack Signature — missing configuration", () => {
 // ── Missing / partial $json fields ───────────────────────────────────────────
 
 describe("Validate Slack Signature — defensive defaults", () => {
-  it("defaults user_id and response_url to empty strings when body is absent", () => {
+  it("body is undefined when not present in input (downstream must handle via $json.body?.user_id)", () => {
     const timestamp = freshTimestamp();
     const $input = makeInput({
       rawBody: RAW_BODY,
@@ -208,13 +210,13 @@ describe("Validate Slack Signature — defensive defaults", () => {
         "x-slack-request-timestamp": timestamp,
         "x-slack-signature": sign(SECRET, timestamp, RAW_BODY),
       },
-      // no body key
+      // no body key — the raw object is spread as-is; body is absent
     });
 
     const [result] = run({ $input, $env: { SLACK_SIGNING_SECRET: SECRET } });
 
-    expect(result.json.user_id).toBe("");
-    expect(result.json.response_url).toBe("");
+    expect(result.json.valid).toBe(true);
+    expect(result.json.body).toBeUndefined();
   });
 
   it("defaults rawBody to empty string when absent from $json", () => {

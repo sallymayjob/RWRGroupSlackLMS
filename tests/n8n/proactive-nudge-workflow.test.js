@@ -49,4 +49,28 @@ describe("proactive nudge workflow", () => {
     expect(assignmentButton.value).toContain("lesson_id");
   });
 
+  it("checks Slack API ok field before logging notification (H-1 fix)", () => {
+    const workflow = loadWorkflow();
+    const ifNode = workflow.nodes.find((node) => node.name === "DM Sent OK?");
+    const logNode = workflow.nodes.find((node) => node.name === "Log Notification");
+    const failNode = workflow.nodes.find((node) => node.name === "Log Delivery Failure");
+
+    expect(ifNode).toBeDefined();
+    expect(logNode).toBeDefined();
+    expect(failNode).toBeDefined();
+
+    // IF node checks $json.ok
+    const condition = ifNode.parameters.conditions.conditions[0];
+    expect(condition.leftValue).toContain("ok");
+
+    // Log Delivery Failure records to audit_log
+    expect(failNode.parameters.query).toContain("audit_log");
+    expect(failNode.parameters.query).toContain("nudge_delivery_failed");
+  });
+
+  it("Send DM Nudge connects to DM Sent OK? not directly to Log Notification", () => {
+    const workflow = loadWorkflow();
+    const sendConnections = workflow.connections["Send DM Nudge"].main[0];
+    expect(sendConnections[0].node).toBe("DM Sent OK?");
+  });
 });
