@@ -54,19 +54,27 @@ Example upstream target inside Docker network:
 
 Set command Request URLs to:
 
-- `https://<your-domain>/webhook/supervisor`
+- `https://<your-domain>/webhook/supervisor` (all supervisor commands)
+- `https://<your-domain>/webhook/onboard` (`/onboard` only)
+- `https://<your-domain>/webhook/backup` (`/backup` only)
 
-Commands:
+Supervisor commands (route to `/webhook/supervisor`):
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
+- `/unenroll`
 - `/cert`
 - `/report`
 - `/gaps`
-- `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+- `/courses`
+- `/help`
 
-Legacy commands (optional): `/submit`, `/complete`, `/feedback`, `/tutor`.
+Dedicated-route commands:
+- `/onboard` → `/webhook/onboard`
+- `/backup` → `/webhook/backup`
+
+Note: there is no `/quiz` command — the mission submission command is `/submit`.
 
 Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)
@@ -161,7 +169,9 @@ Recovery drill cadence:
 
 ## Database Schema Reference
 
-Use `data/lms_database_schema.sql` as the operational schema baseline (see `docs/DATABASE_SCHEMA.md`).
+Apply both schema files before first launch (see `docs/DATABASE_SCHEMA.md` for full details):
+- `db/schema.sql` — runtime app schema (users, enrolments, modules, progress, nudges, assignments)
+- `data/lms_database_schema.sql` — content/operational schema (learners, lessons, lesson_progress, agent_audit_logs)
 
 
 ## Content Architect Prompt Binding

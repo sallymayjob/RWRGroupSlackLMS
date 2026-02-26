@@ -21,7 +21,7 @@ RWRGroupSlackLMS/
 │   ├── db.js                 # PostgreSQL pool wrapper
 │   ├── cache.js              # Redis client wrapper
 │   ├── handlers/
-│   │   ├── commands.js       # All 8 slash commands → n8n
+│   │   ├── commands.js       # All 12 slash commands → n8n
 │   │   ├── events.js         # app_mention, message.im → n8n
 │   │   └── interactions.js   # Block Kit actions & modal submissions → n8n
 │   └── services/
@@ -132,19 +132,31 @@ npm test        # or the equivalent for the chosen stack
 | File | Purpose |
 |------|---------|
 | `SECURITY.md` | Vulnerability reporting policy |
-| `.env.example` | Environment variable template (to be created) |
-| `src/` | Application source (to be created) |
+| `.env.example` | Environment variable template |
+| `src/index.js` | App entry point — env validation, startup, health endpoint |
+| `src/handlers/commands.js` | Slash command registration and n8n forwarding |
+| `src/services/n8n.js` | Centralized n8n webhook routing with retry/timeout |
+| `db/schema.sql` | Runtime PostgreSQL schema (users, enrolments, modules, progress, nudges, assignments) |
+| `data/lms_database_schema.sql` | Content/operational schema (learners, lessons, lesson_progress, agent_audit_logs) |
+| `slack_manifest.json` | Slack app manifest — source of truth for commands and scopes |
+| `n8n/workflows/` | n8n workflow JSON exports — import via n8n UI |
+| `docs/SLACK_MANIFEST_INTEGRATION.md` | Command → agent routing reference |
+| `docs/DATABASE_SCHEMA.md` | Dual-schema reference and mapping guidance |
 
 ---
 
-## Getting Started (Placeholder)
+## Getting Started
 
-This section will be updated once the project scaffolding is in place. For now:
-
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in credentials
-3. Install dependencies (e.g., `npm install`)
-4. Run the development server (e.g., `npm run dev`)
+1. Clone the repository.
+2. Copy `.env.example` to `.env` and fill in credentials.
+3. Install dependencies: `npm install`
+4. Apply database schemas:
+   ```bash
+   psql "$DATABASE_URL" -f db/schema.sql
+   psql "$DATABASE_URL" -f data/lms_database_schema.sql
+   ```
+5. Import n8n workflows from `n8n/workflows/` (see `docs/DEPLOYMENT.md` for import order).
+6. Run the development server: `npm run dev`
 
 ---
 
@@ -158,9 +170,12 @@ All business logic lives in n8n. The supervisor router (`n8n/workflows/superviso
 | `/submit` | Agent 02 — Quiz Master | `wpJOwdjIluP9n6Tu` | supervisor |
 | `/progress` | Agent 04 — Progress Tracker | `z8j0WZhQCfsduOdi` | supervisor |
 | `/enroll` | Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` | supervisor |
+| `/unenroll` | Agent 08 — Enrollment Manager | `BjxEx4DjqMwlkrU4` | supervisor |
 | `/cert` | Agent 07 — Certification | `TcY8C8malQ5SiTqZ` | supervisor |
 | `/report` | Agent 12 — Reporting Agent (Gemini) | `HpgyOs9wKZz2mAQd` | supervisor |
 | `/gaps` | Agent 09 — Gap Analyst (Gemini) | `g5ZY673tbmDswpl4` | supervisor |
+| `/courses` | supervisor (inline list lookup) | — | supervisor |
+| `/help` | supervisor (inline help dispatch) | — | supervisor |
 | `/onboard` | Agent 13 — Onboarding Agent (Gemini) | `R8adLhGssCewBrKC` | onboard |
 | `/backup` | Agent 14 — Google Sheets Backup | `BackupToGSheets01` | backup |
 

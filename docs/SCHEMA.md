@@ -5,7 +5,7 @@ This schema package captures your latest workspace and curriculum structure:
 - **Workspace URL**: `https://www.notion.so/Slack-LMS-RWR-Group-30558a9ec642819785c7d39dbce75ef1`
 - **Root Page ID**: `30558a9ec642819785c7d39dbce75ef1`
 
-- **Architecture**: Notion = content authoring, Firestore = learner state, Slack = delivery.
+- **Architecture**: Notion = content authoring, PostgreSQL = learner state, Slack = delivery.
 - **Program shape**: **12 months × 4 weeks × 6 lessons** = **288 lessons**.
 - **Curriculum hierarchy**: **Course → Months → Lessons**.
 
@@ -40,4 +40,4 @@ Each lesson should follow this order:
 - Use `LessonID` as immutable upsert key for Lessons.
 - Ensure `Submit Command` value exactly matches progress tracker parser (`/submit <lesson_code>`).
 - Enforce ULC constraints in a Code node before writing to Notion (word/sentence limits).
-- Keep sync order: **Notion → LM data table/Firestore mirror → Google Sheets dashboard**.
+- Keep sync order: **Notion → LM data table (PostgreSQL) → Google Sheets dashboard**.
