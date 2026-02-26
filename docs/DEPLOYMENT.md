@@ -54,19 +54,26 @@ Example upstream target inside Docker network:
 
 Set command Request URLs to:
 
-- `https://<your-domain>/webhook/supervisor`
+- Supervisor commands: `https://<your-domain>/webhook/supervisor`
+- Onboarding command: `https://<your-domain>/webhook/onboard`
+- Backup command: `https://<your-domain>/webhook/backup`
 
-Commands:
+Commands (must match `src/handlers/commands.js`):
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
+- `/unenroll`
 - `/cert`
 - `/report`
 - `/gaps`
-- `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+- `/courses`
+- `/help`
+- `/onboard`
+- `/backup`
 
-Legacy commands (optional): `/submit`, `/complete`, `/feedback`, `/tutor`.
+Legacy compatibility aliases are workflow-only (not registered slash commands): `/quiz`, `/complete`, `/feedback`, `/tutor`.
+Mapping location: `workflows/Router.json` (`Parse Slack Payload` node) and `workflows/slack_supervisor.workflow.json` (`Switch by Command` node for `/quiz`).
 
 Enable and configure:
 - OAuth scopes (chat:write, commands, users:read as needed)

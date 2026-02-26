@@ -49,20 +49,27 @@ Critical required values:
 
 ## 5) Slack Command Configuration
 
-Register manifest commands in your Slack app:
+Register slash commands to match `src/handlers/commands.js` exactly:
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
+- `/unenroll`
 - `/cert`
 - `/report`
 - `/gaps`
+- `/courses`
+- `/help`
 - `/onboard` (points to `https://<your-domain>/webhook/onboard`)
+- `/backup` (points to `https://<your-domain>/webhook/backup`)
 
-Legacy commands are still accepted for compatibility: `/submit`, `/complete`, `/feedback`, `/tutor`.
+Set command Request URLs:
+- Supervisor commands: `https://<your-domain>/webhook/supervisor`
+- Onboarding command: `https://<your-domain>/webhook/onboard`
+- Backup command: `https://<your-domain>/webhook/backup`
 
-Set command Request URL:
-- `https://<your-domain>/webhook/supervisor`
+Legacy compatibility aliases exist only inside workflow routing logic (they are not slash commands registered by `src/handlers/commands.js`): `/quiz`, `/complete`, `/feedback`, `/tutor`.
+Mapping location: `workflows/Router.json` (`Parse Slack Payload` node) and `workflows/slack_supervisor.workflow.json` (`Switch by Command` node for `/quiz`).
 
 
 ## 5A) Notion Workspace Binding (Your Database)
@@ -104,7 +111,7 @@ For full stack deployment (Docker Compose, reverse proxy, queue workers, hardeni
 
 - All workflows imported and activated
 - Slack commands verified end-to-end
-- Agent 4 (`/submit`, `/complete`) state checks validated
+- Agent 4 (`/submit`) state checks validated (legacy `/complete` alias is workflow-only compatibility)
 - Friday quiz + assessment schedule configured
 - Certification + manager/admin notifications enabled
 - Reporting workflow updates dashboard successfully

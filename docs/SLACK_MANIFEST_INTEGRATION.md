@@ -6,18 +6,23 @@ This project is aligned to your provided Slack manifest.
 - `docs/slack_app_manifest.json`
 
 ## Endpoint mapping
-- Supervisor commands (`/learn`, `/quiz`, `/progress`, `/enroll`, `/cert`, `/report`, `/gaps`) -> `POST /webhook/supervisor`
+- Supervisor commands (`/learn`, `/submit`, `/progress`, `/enroll`, `/unenroll`, `/cert`, `/report`, `/gaps`, `/courses`, `/help`) -> `POST /webhook/supervisor`
 - Onboarding command (`/onboard`) -> `POST /webhook/onboard`
 - Events -> `POST /webhook/slack/events`
 - Interactivity -> `POST /webhook/slack-interactions`
 
 ## n8n routing alignment
-In `workflows/slack_supervisor.workflow.json`:
-- `/learn` -> agent 3 (Tutor)
-- `/quiz` -> agent 2 (Quiz Master)
-- `/progress` and `/report` -> agent 12 (Reporting)
-- `/enroll` -> agent 8 (Enrollment)
-- `/cert` -> agent 7 (Certification)
-- `/gaps` -> agent 9 (Gap Analyst)
+In `src/handlers/commands.js` (source of truth):
+- `/learn` -> supervisor workflow
+- `/submit` -> supervisor workflow
+- `/progress` and `/report` -> supervisor workflow
+- `/enroll` and `/unenroll` -> supervisor workflow
+- `/cert` -> supervisor workflow
+- `/gaps` -> supervisor workflow
+- `/courses` and `/help` -> supervisor workflow
+- `/onboard` -> onboard workflow
+- `/backup` -> backup workflow
 
-Legacy commands (`/submit`, `/complete`, `/feedback`, `/tutor`) are still accepted for backward compatibility.
+Legacy compatibility aliases are handled only inside workflow router logic (not registered as Slack slash commands):
+- `/quiz`, `/complete`, `/feedback`, `/tutor`
+- Mapping location: `workflows/Router.json` (`Parse Slack Payload` node) and `workflows/slack_supervisor.workflow.json` (`Switch by Command` node for `/quiz`).
