@@ -62,32 +62,58 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and fill in all required values:
+Edit `.env` and fill using the canonical env matrix below:
+
+### Canonical environment matrix
+
+<!-- REQUIRED_ENV_VARS_START -->
+- `SLACK_BOT_TOKEN`
+- `SLACK_SIGNING_SECRET`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `N8N_BASE_URL`
+<!-- REQUIRED_ENV_VARS_END -->
+
+| Variable | Required | Used by | Notes |
+|----------|----------|---------|-------|
+| `SLACK_BOT_TOKEN` | Yes | Slack Bolt app auth | Bot token from Slack app config |
+| `SLACK_SIGNING_SECRET` | Yes | Slack request verification | Signing secret from Slack app config |
+| `DATABASE_URL` | Yes | Postgres connection (`src/db`) | Example: `postgresql://...` |
+| `REDIS_URL` | Yes | Redis cache connection (`src/cache`) | Example: `redis://...` |
+| `N8N_BASE_URL` | Yes | n8n forwarding service | Base URL used to build webhook URLs |
+| `N8N_WEBHOOK_SECRET` | No | n8n forwarding service | Optional `X-Webhook-Secret` header |
+| `N8N_TIMEOUT_MS` | No | n8n forwarding service | Optional timeout override, default `2500` |
+| `N8N_RETRY_LIMIT` | No | n8n forwarding service | Optional retry count, default `2` |
+| `N8N_MAX_PAYLOAD_BYTES` | No | n8n forwarding service | Optional max payload size, default `262144` |
+| `PORT` | No | HTTP server bind port | Defaults to `3000` |
+| `GOOGLE_SHEETS_BACKUP_ID` | No | Backup workflow handlers | Required only for Google Sheets backup flows |
+| `SLACK_ADMIN_WEBHOOK_URL` | No | Backup notification handlers | Required only for backup status notifications |
 
 ```env
-# Slack
+# Required startup variables
 SLACK_BOT_TOKEN=xoxb-...
 SLACK_SIGNING_SECRET=...
-
-# n8n
-N8N_BASE_URL=https://n8n.your-domain.com
-N8N_WEBHOOK_SECRET=choose-a-strong-random-secret
-
-# Postgres
 DATABASE_URL=postgresql://lms_user:STRONG_PASSWORD@localhost:5432/lms_db
-POSTGRES_USER=lms_user
-POSTGRES_PASSWORD=STRONG_PASSWORD
-POSTGRES_DB=lms_db
-
-# Redis
 REDIS_URL=redis://localhost:6379
+N8N_BASE_URL=https://n8n.your-domain.com
 
-# Agent 14 — Google Sheets Backup
+# Optional runtime tuning / features
+N8N_WEBHOOK_SECRET=choose-a-strong-random-secret
+N8N_TIMEOUT_MS=2500
+N8N_RETRY_LIMIT=2
+N8N_MAX_PAYLOAD_BYTES=262144
+PORT=3000
 GOOGLE_SHEETS_BACKUP_ID=your-spreadsheet-id
 SLACK_ADMIN_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
-> The app will refuse to start if any of the first five variables (`SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `DATABASE_URL`, `REDIS_URL`, `N8N_BASE_URL`) are missing.
+> The app will refuse to start if any of the five required startup variables are missing.
+
+### Legacy / advanced n8n-only variables
+
+If you also self-host n8n, you may need additional n8n runtime variables such as:
+`N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `N8N_SECURE_COOKIE`, `DB_POSTGRESDB_*`, `QUEUE_BULL_REDIS_*`, etc.
+These are not required by this Node app startup check.
 
 ---
 
@@ -342,7 +368,7 @@ docker compose -f docker-compose.yml up -d n8n
 
 ### App won't start — "Missing required environment variables"
 
-Check `.env` contains all five required vars: `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `DATABASE_URL`, `REDIS_URL`, `N8N_BASE_URL`.
+Check `.env` contains all five required startup vars listed in the canonical matrix above: `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `DATABASE_URL`, `REDIS_URL`, `N8N_BASE_URL`.
 
 ### Slash commands return "dispatch_failed" from Slack
 
