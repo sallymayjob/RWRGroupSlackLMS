@@ -151,18 +151,42 @@ See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production deployment, Nginx 
 
 ## Environment Variables
 
-See `.env.example` for the full list. Required at startup (app exits with a clear error if any are missing):
+This repository uses the following **canonical env matrix** (derived from `src/index.js` startup validation and `src/services/n8n.js` runtime settings).
 
-| Variable | Description |
-|----------|-------------|
-| `SLACK_BOT_TOKEN` | `xoxb-…` bot token from Slack app settings |
-| `SLACK_SIGNING_SECRET` | Signing secret from Slack app settings |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection string |
-| `N8N_BASE_URL` | Base URL of your n8n instance |
-| `N8N_WEBHOOK_SECRET` | Shared secret header for app→n8n webhook auth (strongly recommended; required in production) |
-| `GOOGLE_SHEETS_BACKUP_ID` | Spreadsheet ID for Agent 14 backups |
-| `SLACK_ADMIN_WEBHOOK_URL` | Incoming webhook for backup notifications |
+### Required at app startup
+
+<!-- REQUIRED_ENV_VARS_START -->
+- `SLACK_BOT_TOKEN`
+- `SLACK_SIGNING_SECRET`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `N8N_BASE_URL`
+<!-- REQUIRED_ENV_VARS_END -->
+
+| Variable | Required | Used by | Notes |
+|----------|----------|---------|-------|
+| `SLACK_BOT_TOKEN` | Yes | Slack Bolt app auth | Bot token from Slack app config |
+| `SLACK_SIGNING_SECRET` | Yes | Slack request verification | Signing secret from Slack app config |
+| `DATABASE_URL` | Yes | Postgres connection (`src/db`) | Example: `postgresql://...` |
+| `REDIS_URL` | Yes | Redis cache connection (`src/cache`) | Example: `redis://...` |
+| `N8N_BASE_URL` | Yes | n8n forwarding service | Base URL used to build webhook URLs |
+| `N8N_WEBHOOK_SECRET` | No | n8n forwarding service | Optional `X-Webhook-Secret` header |
+| `N8N_TIMEOUT_MS` | No | n8n forwarding service | Optional timeout override, default `2500` |
+| `N8N_RETRY_LIMIT` | No | n8n forwarding service | Optional retry count, default `2` |
+| `N8N_MAX_PAYLOAD_BYTES` | No | n8n forwarding service | Optional max payload size, default `262144` |
+| `PORT` | No | HTTP server bind port | Defaults to `3000` |
+| `GOOGLE_SHEETS_BACKUP_ID` | No | Backup workflow handlers | Required only for Google Sheets backup flows |
+| `SLACK_ADMIN_WEBHOOK_URL` | No | Backup notification handlers | Required only for backup status notifications |
+
+### Legacy / advanced n8n-only variables
+
+The variables below are frequently used in standalone n8n deployments, but are **not required by this Node app startup validation** and **not directly consumed in `src/index.js` or `src/services/n8n.js`**:
+
+- `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `N8N_SECURE_COOKIE`
+- `DB_POSTGRESDB_*`, `QUEUE_BULL_REDIS_*`, and other n8n runtime infrastructure vars
+- Notion/Gemini/Google/email credential variables used inside n8n workflow nodes
+
+Use them only when your n8n hosting model requires them.
 
 ---
 

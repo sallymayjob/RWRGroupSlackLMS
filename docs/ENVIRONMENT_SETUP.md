@@ -1,5 +1,8 @@
 # Environment Setup (n8n)
 
+> **Status note:** This document is n8n-focused and contains historical/advanced variables that may conflict with current app startup requirements.
+> The canonical required env list for the Node app lives in `README.md` and root `DEPLOYMENT.md` (canonical env matrix sections).
+
 This project is designed for **n8n workflow automation** with production-ready environment and deployment settings.
 
 ## 1) n8n Prerequisites
@@ -21,23 +24,21 @@ This project is designed for **n8n workflow automation** with production-ready e
 2. Fill all secrets and URLs
 3. Generate a strong `N8N_ENCRYPTION_KEY`
 
-Critical required values:
-- `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`
-- `N8N_EDITOR_BASE_URL`, `N8N_SECURE_COOKIE=true`
-- `DB_POSTGRESDB_*`
-- `QUEUE_BULL_REDIS_*`
-- Slack, Notion, Gemini, Google, Email keys
-- Notion IDs: `NOTION_ROOT_PAGE_ID`, `NOTION_COURSES_DB_ID`, `NOTION_MONTHS_DB_ID`, `NOTION_LESSONS_DB_ID`
+Environment requirements split:
 
-## 3) Import Workflow JSON Files
+- **Required by Node app startup (canonical):** `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `DATABASE_URL`, `REDIS_URL`, `N8N_BASE_URL`.
+- **Optional in Node app runtime:** `N8N_WEBHOOK_SECRET`, `N8N_TIMEOUT_MS`, `N8N_RETRY_LIMIT`, `N8N_MAX_PAYLOAD_BYTES`, `PORT`, backup-related vars.
+- **Legacy/advanced n8n-only (this doc):** `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL`, `N8N_SECURE_COOKIE`, `DB_POSTGRESDB_*`, `QUEUE_BULL_REDIS_*`, and workflow-specific integration secrets.
+
+Use this file for n8n platform setup details; use README/DEPLOYMENT as source of truth for app startup env validation.
+
+## 3) Import Workflow JSON Files (Canonical Path)
 
 1. In n8n, go to **Workflows → Import from File**.
-2. Import `workflows/slack_supervisor.workflow.json`.
-3. Import `workflows/slack_onboard.workflow.json`.
-4. Import `workflows/agent_subworkflow_template.workflow.json`.
-5. Duplicate template to create all 14 agent workflows.
-6. Set workflow names to match README agent map.
-7. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
+2. Import workflow files from `n8n/workflows/` (canonical source path).
+3. Import `n8n/workflows/supervisor-router.json` first.
+4. Import the remaining agent workflows from `n8n/workflows/` (see `DEPLOYMENT.md` section **8.1 Import workflows** for full order).
+5. Activate workflows after validating credentials and webhook URLs.
 
 ## 4) Credentials to Configure in n8n
 

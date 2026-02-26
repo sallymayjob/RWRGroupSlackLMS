@@ -10,9 +10,15 @@
     "test:watch": "jest --watch",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
-    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\""
+    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
+    "check:env-docs": "node scripts/check-env-docs.js"
   },
-  "keywords": ["slack", "lms", "learning", "rwr-group"],
+  "keywords": [
+    "slack",
+    "lms",
+    "learning",
+    "rwr-group"
+  ],
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {

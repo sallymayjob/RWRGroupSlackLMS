@@ -11,8 +11,12 @@ This project is aligned to your provided Slack manifest.
 - Events -> `POST /webhook/slack/events`
 - Interactivity -> `POST /webhook/slack-interactions`
 
+## n8n workflow import path (canonical)
+- Import workflows from `n8n/workflows/` only.
+- Do not use legacy `workflows/*.workflow.json` files for new deployments.
+
 ## n8n routing alignment
-In `workflows/slack_supervisor.workflow.json`:
+In `n8n/workflows/supervisor-router.json`:
 - `/learn` -> agent 3 (Tutor)
 - `/quiz` -> agent 2 (Quiz Master)
 - `/progress` and `/report` -> agent 12 (Reporting)
