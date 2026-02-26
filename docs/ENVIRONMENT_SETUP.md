@@ -35,10 +35,11 @@ Use this file for n8n platform setup details; use README/DEPLOYMENT as source of
 ## 3) Import Workflow JSON Files (Canonical Path)
 
 1. In n8n, go to **Workflows → Import from File**.
-2. Import workflow files from `n8n/workflows/` (canonical source path).
-3. Import `n8n/workflows/supervisor-router.json` first.
-4. Import the remaining agent workflows from `n8n/workflows/` (see `DEPLOYMENT.md` section **8.1 Import workflows** for full order).
-5. Activate workflows after validating credentials and webhook URLs.
+2. Import the canonical workflow exports from `workflows/n8n-export/` (including supervisor router and agent workflows).
+3. Legacy workflow exports moved to `archive/workflows-legacy/` for reference only.
+4. Duplicate template to create all 14 agent workflows (if your n8n setup requires template cloning).
+5. Set workflow names to match README agent map.
+6. Update Execute Workflow nodes in supervisor/onboard workflows if names/IDs differ.
 
 ## 4) Credentials to Configure in n8n
 
@@ -52,7 +53,7 @@ Use this file for n8n platform setup details; use README/DEPLOYMENT as source of
 
 Register manifest commands in your Slack app:
 - `/learn`
-- `/quiz`
+- `/submit`
 - `/progress`
 - `/enroll`
 - `/cert`
