@@ -1,4 +1,4 @@
-jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
 
 const ALL_COMMANDS = [
   "/learn",
@@ -24,10 +24,10 @@ describe("commands handler", () => {
 
   beforeEach(() => {
     jest.resetModules();
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
     registered = [];
     const fakeApp = { command: (name) => registered.push(name) };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it("registers all 12 slash commands", () => {
@@ -47,10 +47,10 @@ describe("commands handler — behavior", () => {
   beforeEach(() => {
     jest.resetModules();
     mockForward = jest.fn().mockResolvedValue(undefined);
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: mockForward }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: mockForward }));
     handlers = {};
     const fakeApp = { command: (name, fn) => { handlers[name] = fn; } };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it.each(SUPERVISOR_COMMANDS)(

@@ -112,7 +112,7 @@ describe("Scenario A — Normal load (50 ms n8n, 100 concurrent users)", () => {
     mockForwardCallTimes = [];
 
     // Factory references only mock-prefixed module-level var — allowed by Jest
-    jest.mock("../../src/services/n8n", () => ({
+    jest.mock("../../src/services/n8nService", () => ({
       forwardToN8n: jest.fn().mockImplementation(async () => {
         const t0 = Date.now();
         await new Promise((r) => setTimeout(r, 50));
@@ -122,7 +122,7 @@ describe("Scenario A — Normal load (50 ms n8n, 100 concurrent users)", () => {
 
     handlers = {};
     const fakeApp = { command: (name, fn) => { handlers[name] = fn; } };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it("all 100 ack() calls complete near-instantly (< 50 ms each)", async () => {
@@ -151,7 +151,7 @@ describe("Scenario A — Normal load (50 ms n8n, 100 concurrent users)", () => {
     expect(maxAckMs).toBeLessThan(50);
 
     // forwardToN8n called exactly once per user
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     expect(forwardToN8n).toHaveBeenCalledTimes(NUM_USERS);
 
     // Concurrency: 100 × 50ms serial = 5000ms; parallel ≈ 50–300ms
@@ -167,7 +167,7 @@ describe("Scenario A — Normal load (50 ms n8n, 100 concurrent users)", () => {
   });
 
   it("dispatches every command to the correct n8n workflow", async () => {
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     const promises = [];
 
     for (let i = 0; i < NUM_USERS; i++) {
@@ -204,7 +204,7 @@ describe("Scenario B — Slow n8n (timeout after retries, 100 concurrent users)"
     // Simulate the real n8n.js timeout path:
     //   100ms timeout × 2 attempts + 200ms backoff ≈ 400ms per user
     // Compressed to 20ms per attempt for test speed.
-    jest.mock("../../src/services/n8n", () => ({
+    jest.mock("../../src/services/n8nService", () => ({
       forwardToN8n: jest.fn().mockImplementation(async () => {
         await new Promise((r) => setTimeout(r, 20)); // attempt 1 timeout
         await new Promise((r) => setTimeout(r, 20)); // attempt 2 timeout
@@ -214,7 +214,7 @@ describe("Scenario B — Slow n8n (timeout after retries, 100 concurrent users)"
 
     handlers = {};
     const fakeApp = { command: (name, fn) => { handlers[name] = fn; } };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it("ack() is always called — never blocked by a slow n8n", async () => {
@@ -241,7 +241,7 @@ describe("Scenario B — Slow n8n (timeout after retries, 100 concurrent users)"
     expect(wallMs).toBeLessThan(1000);
 
     // forwardToN8n was attempted for every user
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     expect(forwardToN8n).toHaveBeenCalledTimes(NUM_USERS);
 
     printReport("Scenario B — Timeout", [], NUM_USERS, wallMs);
@@ -275,7 +275,7 @@ describe("Scenario C — Partial failures (30 % n8n errors, 50 ms latency)", () 
     mockFailureCount = 0;
 
     // Deterministic: every 3rd call (0-indexed) throws, the rest resolve
-    jest.mock("../../src/services/n8n", () => ({
+    jest.mock("../../src/services/n8nService", () => ({
       forwardToN8n: jest.fn().mockImplementation(async () => {
         await new Promise((r) => setTimeout(r, 50));
         const idx = mockCallIndex++;
@@ -289,7 +289,7 @@ describe("Scenario C — Partial failures (30 % n8n errors, 50 ms latency)", () 
 
     handlers = {};
     const fakeApp = { command: (name, fn) => { handlers[name] = fn; } };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it("ack() is called for all 100 users regardless of backend failures", async () => {
@@ -349,7 +349,7 @@ describe("Scenario D — /learn burst (100 users, 30 ms n8n)", () => {
     jest.resetModules();
     mockForwardDurations = [];
 
-    jest.mock("../../src/services/n8n", () => ({
+    jest.mock("../../src/services/n8nService", () => ({
       forwardToN8n: jest.fn().mockImplementation(async () => {
         const t0 = Date.now();
         await new Promise((r) => setTimeout(r, 30));
@@ -359,7 +359,7 @@ describe("Scenario D — /learn burst (100 users, 30 ms n8n)", () => {
 
     handlers = {};
     const fakeApp = { command: (name, fn) => { handlers[name] = fn; } };
-    require("../../src/handlers/commands")(fakeApp);
+    require("../../src/slack/commands")(fakeApp);
   });
 
   it("100 concurrent /learn calls — all forwarded, wall-clock < 500 ms", async () => {
@@ -391,7 +391,7 @@ describe("Scenario D — /learn burst (100 users, 30 ms n8n)", () => {
     await Promise.all(promises);
     const wallMs = Date.now() - wallStart;
 
-    const { forwardToN8n } = require("../../src/services/n8n");
+    const { forwardToN8n } = require("../../src/services/n8nService");
     expect(forwardToN8n).toHaveBeenCalledTimes(NUM_USERS);
 
     // All forwards target the supervisor workflow

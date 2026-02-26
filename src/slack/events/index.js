@@ -10,7 +10,7 @@
  *
  * @param {import('@slack/bolt').App} app
  */
-const { forwardToN8n } = require("../../services/n8n");
+const { forwardToN8n } = require("../../services/n8nService");
 
 module.exports = function registerEvents(app) {
   // @mention in any channel

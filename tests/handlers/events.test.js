@@ -1,14 +1,14 @@
-jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
 
 describe("events handler", () => {
   let registered;
 
   beforeEach(() => {
     jest.resetModules();
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: jest.fn() }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: jest.fn() }));
     registered = [];
     const fakeApp = { event: (name) => registered.push(name) };
-    require("../../src/handlers/events")(fakeApp);
+    require("../../src/slack/events")(fakeApp);
   });
 
   it("registers app_mention event", () => {
@@ -27,10 +27,10 @@ describe("events handler — behavior", () => {
   beforeEach(() => {
     jest.resetModules();
     mockForward = jest.fn().mockResolvedValue(undefined);
-    jest.mock("../../src/services/n8n", () => ({ forwardToN8n: mockForward }));
+    jest.mock("../../src/services/n8nService", () => ({ forwardToN8n: mockForward }));
     eventHandlers = {};
     const fakeApp = { event: (name, fn) => { eventHandlers[name] = fn; } };
-    require("../../src/handlers/events")(fakeApp);
+    require("../../src/slack/events")(fakeApp);
   });
 
   it("app_mention forwards to supervisor with type:app_mention spread into payload", async () => {

@@ -7,7 +7,7 @@
  *
  * @param {import('@slack/bolt').App} app
  */
-const { forwardToN8n } = require("../../services/n8n");
+const { forwardToN8n } = require("../../services/n8nService");
 
 /** Commands that route to the supervisor workflow */
 const SUPERVISOR_COMMANDS = [
