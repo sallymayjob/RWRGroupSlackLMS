@@ -1,0 +1,228 @@
+{
+  "name": "ULC Drive \u2192 Slack Update Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "={{ $env.ULC_LESSONS_DRIVE_FOLDER_ID }}",
+          "mode": "id"
+        },
+        "event": "fileUpdated"
+      },
+      "id": "ulc-upd-0001",
+      "name": "Updated Lesson CSV in Drive",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Drive (LMS)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "ulc-upd-0002",
+      "name": "Download Updated CSV",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [220, -200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Drive (LMS)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "parentFolderId": "={{ $env.ULC_GEMINI_SYNC_FOLDER_ID }}"
+        }
+      },
+      "id": "ulc-upd-0003",
+      "name": "Overwrite in Gemini Sync Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [220, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Drive (LMS)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromFile",
+        "options": {
+          "includeEmptyRows": false
+        }
+      },
+      "id": "ulc-upd-0004",
+      "name": "Parse Updated CSV Rows",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [440, -200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Expected CSV columns: lesson_id, title, objective, content, mission\n// LessonID format: M01-W01-L05 or M01-W01-L05.1\nconst LESSON_ID_RE = /^M(0[1-9]|1[0-2])-W(0[1-4])-L(0[1-6])(\\.\\d+)?$/;\nconst channel = $env.SLACK_ANNOUNCEMENT_CHANNEL_ID;\nconst results = [];\n\nfor (const item of $input.all()) {\n  const row = item.json;\n  const lessonId  = (row.lesson_id  || '').trim();\n  const title     = (row.title      || '').trim();\n  const objective = (row.objective  || '').trim();\n  const content   = (row.content    || '').trim();\n  const mission   = (row.mission    || '').trim();\n\n  const idOk = LESSON_ID_RE.test(lessonId);\n  if (!idOk || !title || !content) {\n    results.push({ json: {\n      valid: false,\n      lessonId,\n      reason: !idOk ? 'invalid_lesson_id_format' : 'missing_required_fields'\n    }});\n    continue;\n  }\n\n  const [, m, w, l] = lessonId.match(/^M(\\d+)-W(\\d+)-L(\\d+)/);\n  const blocks = [\n    {\n      type: 'header',\n      text: { type: 'plain_text', text: `\\u{270F}\\uFE0F Updated: ${lessonId} \\u2014 ${title}` }\n    },\n    {\n      type: 'context',\n      elements: [{ type: 'mrkdwn', text: `Module ${parseInt(m, 10)} \\u00B7 Week ${parseInt(w, 10)} \\u00B7 Lesson ${parseInt(l, 10)} \\u00B7 _Lesson content has been revised_` }]\n    }\n  ];\n\n  if (objective) {\n    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*Objective:* ${objective}` } });\n  }\n\n  blocks.push({ type: 'section', text: { type: 'mrkdwn', text: content } });\n  blocks.push({ type: 'divider' });\n\n  if (mission) {\n    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `\\u{1F3AF} *Mission:* ${mission}` } });\n  }\n\n  blocks.push({\n    type: 'section',\n    text: { type: 'mrkdwn', text: `Ready? Use \\`/submit ${lessonId}\\` when you're done.` }\n  });\n\n  results.push({ json: {\n    valid: true,\n    lessonId,\n    channel,\n    text: `Lesson updated: ${lessonId} \\u2014 ${title}`,\n    blocks\n  }});\n}\n\nreturn results;\n"
+      },
+      "id": "ulc-upd-0005",
+      "name": "Validate & Format Updated Lessons",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, -200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ulc-upd-valid-01",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ulc-upd-0006",
+      "name": "LessonID Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [880, -200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SLACK_BOT_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ channel: $json.channel, text: $json.text, blocks: $json.blocks }) }}",
+        "options": {}
+      },
+      "id": "ulc-upd-0007",
+      "name": "Post Update to Announcements",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_ADMIN_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: `:warning: *ULC Update Error* \\u2014 Invalid lesson skipped: \\`${$json.lessonId}\\` (${$json.reason})` }) }}",
+        "options": {}
+      },
+      "id": "ulc-upd-0008",
+      "name": "Notify Admin \u2014 Invalid Lesson",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -50]
+    }
+  ],
+  "connections": {
+    "Updated Lesson CSV in Drive": {
+      "main": [
+        [
+          { "node": "Download Updated CSV", "type": "main", "index": 0 },
+          { "node": "Overwrite in Gemini Sync Folder", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Download Updated CSV": {
+      "main": [
+        [{ "node": "Parse Updated CSV Rows", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Updated CSV Rows": {
+      "main": [
+        [{ "node": "Validate & Format Updated Lessons", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate & Format Updated Lessons": {
+      "main": [
+        [{ "node": "LessonID Valid?", "type": "main", "index": 0 }]
+      ]
+    },
+    "LessonID Valid?": {
+      "main": [
+        [{ "node": "Post Update to Announcements", "type": "main", "index": 0 }],
+        [{ "node": "Notify Admin \u2014 Invalid Lesson", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ulc-upd-v1-00000000-0000-0000-0000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86"
+  },
+  "id": "ULCDriveUpdate01",
+  "tags": [
+    {
+      "createdAt": "2026-02-27T00:00:00.000Z",
+      "updatedAt": "2026-02-27T00:00:00.000Z",
+      "id": "ulc-tag-lms",
+      "name": "LMS"
+    },
+    {
+      "createdAt": "2026-02-27T00:00:00.000Z",
+      "updatedAt": "2026-02-27T00:00:00.000Z",
+      "id": "ulc-tag-ulc",
+      "name": "ULC"
+    }
+  ]
+}

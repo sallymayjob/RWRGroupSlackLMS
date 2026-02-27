@@ -1,0 +1,189 @@
+{
+  "name": "ULC Gemini Sync \u2014 Drive Lessons \u2192 NotebookLM Folder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 1 * * *"
+            }
+          ]
+        }
+      },
+      "id": "ulc-gem-0001",
+      "name": "Daily 1am UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "myDrive",
+            "mode": "list",
+            "cachedResultName": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $env.ULC_LESSONS_DRIVE_FOLDER_ID }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "id": "ulc-gem-0002",
+      "name": "List All Lesson Files",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [220, 0],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Drive (LMS)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter to CSV files only and prepare copy jobs\nconst CSV_MIME = 'text/csv';\nconst items = $input.all();\nconst csvFiles = items.filter(item => {\n  const mime = item.json.mimeType || '';\n  const name = item.json.name || '';\n  return mime === CSV_MIME || name.toLowerCase().endsWith('.csv');\n});\n\nif (csvFiles.length === 0) {\n  return [{ json: { total: 0, files: [], message: 'No CSV lesson files found in source folder.' } }];\n}\n\nreturn csvFiles.map(item => ({\n  json: {\n    fileId: item.json.id,\n    fileName: item.json.name,\n    mimeType: item.json.mimeType\n  }\n}));\n"
+      },
+      "id": "ulc-gem-0003",
+      "name": "Filter CSV Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ulc-gem-0004",
+      "name": "Process Each File",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {
+          "parentFolderId": "={{ $env.ULC_GEMINI_SYNC_FOLDER_ID }}"
+        }
+      },
+      "id": "ulc-gem-0005",
+      "name": "Copy File to Gemini Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [880, -100],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Drive (LMS)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect all sync results and build admin summary\nconst results = $input.all();\nconst ts = new Date().toUTCString();\nconst count = results.length;\nconst names = results\n  .map(r => r.json.name || r.json.fileName || 'unknown')\n  .join(', ');\n\nreturn [{\n  json: {\n    text: `*ULC Gemini Sync Complete* \\u2014 ${ts}\\n\\u2022 Files synced to NotebookLM folder: *${count}*\\n\\u2022 Files: ${names || 'none'}`\n  }\n}];\n"
+      },
+      "id": "ulc-gem-0006",
+      "name": "Build Sync Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, -100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_ADMIN_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "ulc-gem-0007",
+      "name": "Notify Admin \u2014 Sync Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, -100]
+    }
+  ],
+  "connections": {
+    "Daily 1am UTC": {
+      "main": [
+        [{ "node": "List All Lesson Files", "type": "main", "index": 0 }]
+      ]
+    },
+    "List All Lesson Files": {
+      "main": [
+        [{ "node": "Filter CSV Files", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter CSV Files": {
+      "main": [
+        [{ "node": "Process Each File", "type": "main", "index": 0 }]
+      ]
+    },
+    "Process Each File": {
+      "main": [
+        [{ "node": "Copy File to Gemini Folder", "type": "main", "index": 0 }],
+        [{ "node": "Build Sync Summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Copy File to Gemini Folder": {
+      "main": [
+        [{ "node": "Process Each File", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Sync Summary": {
+      "main": [
+        [{ "node": "Notify Admin \u2014 Sync Complete", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ulc-gem-v1-00000000-0000-0000-0000-000000000001",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86"
+  },
+  "id": "ULCGeminiSync01",
+  "tags": [
+    {
+      "createdAt": "2026-02-27T00:00:00.000Z",
+      "updatedAt": "2026-02-27T00:00:00.000Z",
+      "id": "ulc-tag-lms",
+      "name": "LMS"
+    },
+    {
+      "createdAt": "2026-02-27T00:00:00.000Z",
+      "updatedAt": "2026-02-27T00:00:00.000Z",
+      "id": "ulc-tag-ulc",
+      "name": "ULC"
+    }
+  ]
+}
