@@ -34,4 +34,25 @@ module.exports = function registerEvents(app) {
       await say('Sorry, I could not process that right now. Please try again shortly.');
     }
   });
+
+  // ✅ check-mark reaction on a lesson message → mark lesson complete
+  // The reacting user is event.user; event.item identifies the message.
+  // n8n uses the channel + message_ts to look up which lesson was reacted to,
+  // records progress, and advances current_module_id to the next lesson.
+  app.event('reaction_added', async ({ event }) => {
+    if (event.reaction !== 'white_check_mark') return;
+    if (event.item.type !== 'message') return;
+
+    try {
+      await forwardToN8n('supervisor', {
+        type:       'reaction_added.lesson_complete',
+        user:       event.user,
+        channel:    event.item.channel,
+        message_ts: event.item.ts,
+        reaction:   event.reaction,
+      });
+    } catch (err) {
+      logger.error('reaction_added.lesson_complete forward failed:', err.message);
+    }
+  });
 };
