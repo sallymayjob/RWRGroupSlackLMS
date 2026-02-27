@@ -1,0 +1,8 @@
+course_code,course_title,course_description,tags
+SAFETY101,Workplace Safety Training,"Annual workplace safety refresher required for all staff. Covers hazard identification, emergency procedures, and incident reporting.",safety|onboarding
+COMPLIANCE101,Annual Compliance Training,"Mandatory annual compliance training covering data protection, code of conduct, and conflicts of interest.",compliance|onboarding
+LEADERSHIP01,Leadership Essentials,"Foundational leadership skills for new and aspiring managers. Covers communication, delegation, and performance conversations.",leadership
+ONBOARD01,New Employee Onboarding,"A guided onboarding journey for new team members covering systems, culture, and your 30-60-90 day plan.",onboarding
+DATAPRIV01,Data Privacy & GDPR,"Practical guide to data privacy obligations under GDPR. Required for all staff who handle personal data.",compliance|data
+CYBERSEC01,Cybersecurity Awareness,"Core cybersecurity hygiene: phishing recognition, password management, device security, and incident reporting.",security|compliance
+FIRSTAID01,First Aid Awareness,"Basic first aid awareness: recognising emergencies, CPR overview, using a defibrillator, and when to call for help.",safety

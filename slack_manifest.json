@@ -110,6 +110,7 @@
                 "commands",
                 "im:history",
                 "im:write",
+                "reactions:read",
                 "users:read",
                 "users:read.email",
                 "users.profile:read"
@@ -121,7 +122,8 @@
             "request_url": "https://YOUR_APP_URL/slack/events",
             "bot_events": [
                 "app_mention",
-                "message.im"
+                "message.im",
+                "reaction_added"
             ]
         },
         "interactivity": {

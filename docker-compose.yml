@@ -1,20 +1,91 @@
 version: "3.9"
 
 services:
+  # ── n8n workflow import (runs once before n8n starts) ───────────────────────
+  # Imports all workflow JSONs from n8n/workflows/ into the database.
+  # Because workflows carry `"active": true`, n8n will activate their webhooks
+  # on startup.  Safe to re-run: import is idempotent by workflow ID.
+  n8n-setup:
+    image: n8nio/n8n:1.107.4
+    container_name: rwrgroup_lms_n8n_setup
+    entrypoint: ""
+    command: >
+      sh -c "
+        echo '[n8n-setup] Importing workflows from /workflows ...' &&
+        n8n import:workflow --separate --input=/workflows &&
+        echo '[n8n-setup] All workflows imported successfully.'
+      "
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?N8N_ENCRYPTION_KEY must be set — generate with: openssl rand -hex 32}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-lms_db}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-lms_user}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-lms_password}
+    volumes:
+      - ./n8n/workflows:/workflows:ro
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── n8n AI agent server ──────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:1.107.4
+    container_name: rwrgroup_lms_n8n
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      # Set to false when running without HTTPS (e.g. behind a plain HTTP proxy).
+      # Set to true in production when n8n is served over HTTPS.
+      - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-false}
+      # Must match the value used by n8n-setup; keeps credentials consistent
+      # across restarts.  Generate with: openssl rand -hex 32
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?N8N_ENCRYPTION_KEY must be set}
+      # Tell n8n what public URL its webhooks are reachable at (used in the
+      # n8n editor and for webhook trigger node URL generation).
+      - WEBHOOK_URL=${N8N_WEBHOOK_PUBLIC_URL:-http://localhost:5678}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-lms_db}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-lms_user}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-lms_password}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n-setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ── Slack Bolt application ───────────────────────────────────────────────────
   app:
     build: .
     container_name: rwrgroup_lms_app
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3000}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lms_user}:${POSTGRES_PASSWORD:-lms_password}@postgres:5432/${POSTGRES_DB:-lms_db}
       - REDIS_URL=redis://redis:6379
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
-      - N8N_BASE_URL=${N8N_BASE_URL:-https://n8n.srv1371300.hstgr.cloud}
+      - N8N_BASE_URL=${N8N_BASE_URL:-http://n8n:5678}
       - N8N_WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
+      - GOOGLE_SHEETS_BACKUP_ID=${GOOGLE_SHEETS_BACKUP_ID}
+      - SLACK_ADMIN_WEBHOOK_URL=${SLACK_ADMIN_WEBHOOK_URL}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 30s
@@ -28,27 +99,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  n8n:
-    image: n8nio/n8n:1.107.4
-    container_name: rwrgroup_lms_n8n
-    ports:
-      - "127.0.0.1:5678:5678"
-    environment:
-      - N8N_SECURE_COOKIE=true
-      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-lms_db}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER:-lms_user}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-lms_password}
-    volumes:
-      - n8n_data:/home/node/.n8n
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
+  # ── PostgreSQL 16 ────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: rwrgroup_lms_postgres
@@ -69,6 +120,7 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ── Redis 7 ──────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: rwrgroup_lms_redis

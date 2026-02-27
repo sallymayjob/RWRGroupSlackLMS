@@ -1,0 +1,8 @@
+slack_user_id,slack_team_id,course_code,email,display_name
+U012AB3CD1,T012AB3CD1,SAFETY101,alice@example.com,Alice Johnson
+U012AB3CD2,T012AB3CD1,SAFETY101,bob@example.com,Bob Smith
+U012AB3CD3,T012AB3CD1,COMPLIANCE101,carol@example.com,Carol Williams
+U012AB3CD4,T012AB3CD1,COMPLIANCE101,dave@example.com,Dave Brown
+U012AB3CD1,T012AB3CD1,COMPLIANCE101,alice@example.com,Alice Johnson
+U012AB3CD5,T012AB3CD1,ONBOARD01,eve@example.com,Eve Davis
+U012AB3CD6,T012AB3CD1,ONBOARD01,,
