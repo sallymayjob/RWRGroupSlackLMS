@@ -13,6 +13,7 @@
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
     "deploy": "node scripts/deploy.js",
     "db:migrate": "node scripts/migrate.js",
+    "courses:import": "node scripts/import-lessons.js",
     "lessons:import": "node scripts/import-lessons.js",
     "workflows:backup": "node scripts/backupWorkflows.js",
     "check:env-docs": "node scripts/check-env-docs.js"

@@ -1,23 +1,25 @@
 #!/usr/bin/env node
 /**
- * import-lessons.js — bulk-loads courses and lessons (modules) from a CSV.
+ * import-lessons.js — bulk-loads courses and/or lessons (modules) from a CSV.
+ *
+ * The script auto-detects the import mode from the CSV headers:
+ *
+ *   COURSES-ONLY mode (see courses-template.csv):
+ *     course_code, course_title, course_description, [tags]
+ *     → upserts the course catalogue; no lesson data required.
+ *
+ *   COURSES + LESSONS mode (see lessons-template.csv):
+ *     course_code, course_title, course_description,
+ *     lesson_number, lesson_title, lesson_content, [tags]
+ *     → upserts courses AND their lessons (modules) in one pass.
  *
  * Usage:
  *   node scripts/import-lessons.js <path-to-csv>
  *   npm run lessons:import -- lessons.csv
+ *   npm run courses:import -- courses.csv
  *
- * CSV columns (see lessons-template.csv for a ready-to-fill example):
- *   course_code        — short unique identifier used in /enroll  (e.g. SAFETY101)
- *   course_title       — human-readable course name
- *   course_description — one-paragraph course summary
- *   lesson_number      — positive integer; order within the course (1, 2, 3 …)
- *   lesson_title       — lesson heading sent to learners via Slack
- *   lesson_content     — full lesson body text sent to learners via Slack
- *   tags               — OPTIONAL: pipe-separated labels  (e.g. compliance|onboarding)
- *
- * Re-running is safe: rows with the same (course_code, lesson_number) are
- * updated in place; nothing is duplicated.  The whole import runs inside a
- * single transaction — any error rolls everything back.
+ * Re-running is safe: existing rows are updated, never duplicated.
+ * The whole import runs inside a single transaction — any error rolls back.
  */
 
 'use strict';
@@ -72,53 +74,76 @@ function parseCSV(raw) {
   return rows;
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-const REQUIRED_COLS = [
-  'course_code', 'course_title', 'course_description',
-  'lesson_number', 'lesson_title', 'lesson_content',
-];
+// ── Column sets ───────────────────────────────────────────────────────────────
+const COURSE_COLS = ['course_code', 'course_title', 'course_description'];
+const LESSON_COLS = ['lesson_number', 'lesson_title', 'lesson_content'];
 
 async function main() {
   // ── Parse CSV ──────────────────────────────────────────────────────────────
-  const raw              = fs.readFileSync(csvPath, 'utf8');
+  const raw = fs.readFileSync(csvPath, 'utf8');
   const [headerRow, ...dataRows] = parseCSV(raw);
-  const headers          = headerRow.map(h => h.trim().toLowerCase());
+  const headers = headerRow.map(h => h.trim().toLowerCase());
 
-  const missing = REQUIRED_COLS.filter(c => !headers.includes(c));
-  if (missing.length) {
-    console.error(`Missing required columns: ${missing.join(', ')}`);
-    console.error(`Required: ${REQUIRED_COLS.join(', ')},  optional: tags`);
+  // Validate required course columns
+  const missingCourse = COURSE_COLS.filter(c => !headers.includes(c));
+  if (missingCourse.length) {
+    console.error(`Missing required columns: ${missingCourse.join(', ')}`);
+    console.error(`Courses-only format requires: ${COURSE_COLS.join(', ')},  [tags]`);
+    console.error(`Courses+lessons format requires: ${[...COURSE_COLS, ...LESSON_COLS].join(', ')},  [tags]`);
     process.exit(1);
   }
 
-  const col = name => headers.indexOf(name);
+  // Auto-detect mode: all lesson columns present → full import; none → courses only
+  const lessonColsPresent = LESSON_COLS.filter(c => headers.includes(c));
+  const missingLesson     = LESSON_COLS.filter(c => !headers.includes(c));
+
+  if (lessonColsPresent.length > 0 && missingLesson.length > 0) {
+    console.error(`Incomplete lesson columns. Found: ${lessonColsPresent.join(', ')}`);
+    console.error(`Missing: ${missingLesson.join(', ')}`);
+    console.error('Either include ALL lesson columns or none (courses-only mode).');
+    process.exit(1);
+  }
+
+  const includeLessons = lessonColsPresent.length === LESSON_COLS.length;
+  const mode           = includeLessons ? 'courses + lessons' : 'courses only';
+  console.log(`Detected mode: ${mode}`);
+
+  const col      = name => headers.indexOf(name);
+  const minCols  = includeLessons ? COURSE_COLS.length + LESSON_COLS.length : COURSE_COLS.length;
 
   const rows = dataRows
-    .filter(r => r.length >= REQUIRED_COLS.length && r[col('course_code')].trim())
-    .map(r => ({
-      course_code:    r[col('course_code')].trim(),
-      course_title:   r[col('course_title')].trim(),
-      course_desc:    r[col('course_description')].trim(),
-      lesson_number:  parseInt(r[col('lesson_number')].trim(), 10),
-      lesson_title:   r[col('lesson_title')].trim(),
-      lesson_content: r[col('lesson_content')].trim(),
-      tags:           col('tags') >= 0
+    .filter(r => r.length >= minCols && r[col('course_code')].trim())
+    .map(r => {
+      const row = {
+        course_code:  r[col('course_code')].trim(),
+        course_title: r[col('course_title')].trim(),
+        course_desc:  r[col('course_description')].trim(),
+        tags:         col('tags') >= 0
                         ? r[col('tags')].split('|').map(t => t.trim()).filter(Boolean)
                         : [],
-    }));
+      };
+      if (includeLessons) {
+        row.lesson_number  = parseInt(r[col('lesson_number')].trim(), 10);
+        row.lesson_title   = r[col('lesson_title')].trim();
+        row.lesson_content = r[col('lesson_content')].trim();
+      }
+      return row;
+    });
 
   if (!rows.length) {
     console.error('No data rows found in the CSV.');
     process.exit(1);
   }
 
-  const badRows = rows.filter(r => isNaN(r.lesson_number) || r.lesson_number < 1);
-  if (badRows.length) {
-    console.error(`${badRows.length} row(s) have an invalid lesson_number (must be a positive integer):`);
-    badRows.slice(0, 5).forEach(r =>
-      console.error(`  course="${r.course_code}" lesson_number="${r.lesson_number}"`)
-    );
-    process.exit(1);
+  if (includeLessons) {
+    const badRows = rows.filter(r => isNaN(r.lesson_number) || r.lesson_number < 1);
+    if (badRows.length) {
+      console.error(`${badRows.length} row(s) have an invalid lesson_number (must be a positive integer):`);
+      badRows.slice(0, 5).forEach(r =>
+        console.error(`  course="${r.course_code}" lesson_number="${r.lesson_number}"`)
+      );
+      process.exit(1);
+    }
   }
 
   // ── Connect ────────────────────────────────────────────────────────────────
@@ -168,28 +193,32 @@ async function main() {
       }
     }
 
-    // ── Upsert modules / lessons ───────────────────────────────────────────
-    for (const row of rows) {
-      const { rows: [{ id: courseId }] } = await client.query(
-        'SELECT id FROM courses WHERE code = $1', [row.course_code],
-      );
-      const res = await client.query(
-        `INSERT INTO modules (course_id, position, title, content)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (course_id, position) DO UPDATE
-           SET title   = EXCLUDED.title,
-               content = EXCLUDED.content
-         RETURNING (xmax = 0) AS inserted`,
-        [courseId, row.lesson_number, row.lesson_title, row.lesson_content],
-      );
-      if (res.rows[0].inserted) lessonsInserted++; else lessonsUpdated++;
+    // ── Upsert modules / lessons (full mode only) ──────────────────────────
+    if (includeLessons) {
+      for (const row of rows) {
+        const { rows: [{ id: courseId }] } = await client.query(
+          'SELECT id FROM courses WHERE code = $1', [row.course_code],
+        );
+        const res = await client.query(
+          `INSERT INTO modules (course_id, position, title, content)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (course_id, position) DO UPDATE
+             SET title   = EXCLUDED.title,
+                 content = EXCLUDED.content
+           RETURNING (xmax = 0) AS inserted`,
+          [courseId, row.lesson_number, row.lesson_title, row.lesson_content],
+        );
+        if (res.rows[0].inserted) lessonsInserted++; else lessonsUpdated++;
+      }
     }
 
     await client.query('COMMIT');
 
     console.log('\nImport complete');
     console.log(`  Courses : ${coursesInserted} inserted, ${coursesUpdated} updated`);
-    console.log(`  Lessons : ${lessonsInserted} inserted, ${lessonsUpdated} updated`);
+    if (includeLessons) {
+      console.log(`  Lessons : ${lessonsInserted} inserted, ${lessonsUpdated} updated`);
+    }
     console.log(`  Rows processed: ${rows.length}`);
     console.log('');
 
