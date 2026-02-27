@@ -73,3 +73,92 @@ curl -sf http://localhost:3000/health
 - Keep n8n behind authenticated ingress
 - Rotate Slack and integration tokens regularly
 - Avoid default DB credentials in production
+
+---
+
+## 9) Slack app — update manifest after deployment
+
+Two features added since the initial release require the Slack app to be updated
+before they will work in production.
+
+### 9a) ✅ Reaction-based lesson completion
+
+The bot now listens for a `white_check_mark` (✅) reaction on lesson messages to
+mark a lesson complete and advance the learner to the next module.
+
+**Required manifest changes** (already reflected in `slack_manifest.json`):
+
+| Type | Value |
+|------|-------|
+| Bot OAuth scope | `reactions:read` |
+| Bot event subscription | `reaction_added` |
+
+**Steps to apply:**
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and open the app.
+2. **Option A — paste the manifest:**
+   - Navigate to **App Manifest** in the left sidebar.
+   - Replace the contents with `slack_manifest.json` from this repo.
+   - Click **Save Changes**.
+3. **Option B — manual:**
+   - Go to **OAuth & Permissions → Scopes → Bot Token Scopes** and add `reactions:read`.
+   - Go to **Event Subscriptions → Subscribe to bot events** and add `reaction_added`.
+   - Click **Save Changes**.
+4. Reinstall the app to the workspace (**Install App → Reinstall to Workspace**) so
+   the updated OAuth scopes take effect.
+
+> No code deployment or restart is needed — the handler is already in `src/slack/events/index.js`.
+
+---
+
+## 10) Bulk enrolment import
+
+Use this after the initial DB migration to enrol a batch of learners at once from a CSV.
+
+### CSV format
+
+Create a CSV file with the following columns:
+
+| Column | Required | Description |
+|--------|----------|-------------|
+| `slack_user_id` | Yes | Slack member ID, e.g. `U012AB3CD` |
+| `slack_team_id` | Yes | Slack workspace ID, e.g. `T012AB3CD` |
+| `course_code` | Yes | Must match an existing row in `courses.code` |
+| `email` | No | Populates the user record (leave blank to skip) |
+| `display_name` | No | Populates the user record (leave blank to skip) |
+
+A ready-to-fill template is at `enrollments-template.csv` in the project root.
+
+A user can appear on multiple rows to enrol them in several courses at once.
+
+### Run the import
+
+```bash
+# Copy and fill in the template
+cp enrollments-template.csv my-enrollments.csv
+
+# Run the import (DATABASE_URL must be set in .env)
+npm run enroll:import -- my-enrollments.csv
+```
+
+Sample output:
+
+```
+Enrolment import complete
+  Users     : 5 created, 1 updated
+  Enrolments: 6 enrolled, 1 already enrolled (skipped)
+  Rows processed: 7
+```
+
+### Behaviour notes
+
+- **Idempotent** — re-running with the same file is safe; already-enrolled users are
+  counted as skipped, never duplicated.
+- **User auto-creation** — if a `slack_user_id` doesn't exist in the DB yet, the user
+  record is created automatically.
+- **Starts at lesson 1** — `current_module_id` is set to the lowest-position module of
+  the enrolled course.
+- **Unknown course warning** — rows referencing a `course_code` that doesn't exist are
+  logged as warnings and skipped; the rest of the import continues.
+- **Atomic** — the entire import runs in one transaction; any unexpected error rolls
+  everything back.
