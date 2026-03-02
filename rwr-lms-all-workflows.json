@@ -1,4 +1,7 @@
 {
+  "meta": {
+    "instanceId": "ba37a5ead069c5845647db1501a84f6ed072f343613a89495632df83e5b43e86"
+  },
   "workflows": [
     {
       "name": "Agent 02 — Quiz Master",
