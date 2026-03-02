@@ -12,83 +12,83 @@
         "slash_commands": [
             {
                 "command": "/learn",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Continue your next lesson",
                 "usage_hint": "Resume learning",
                 "should_escape": false
             },
             {
                 "command": "/submit",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Complete your mission for the current module",
                 "usage_hint": "Complete your mission",
                 "should_escape": false
             },
             {
                 "command": "/progress",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "View your learning progress",
                 "usage_hint": "Show my stats",
                 "should_escape": false
             },
             {
                 "command": "/enroll",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Enroll in a course",
                 "usage_hint": "Enter course ID",
                 "should_escape": true
             },
             {
                 "command": "/unenroll",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Unenroll from a course",
                 "usage_hint": "Enter course ID",
                 "should_escape": true
             },
             {
                 "command": "/cert",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Get your certificate",
                 "usage_hint": "Issue certificate",
                 "should_escape": false
             },
             {
                 "command": "/report",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "View LMS analytics dashboard",
                 "usage_hint": "Show dashboard",
                 "should_escape": false
             },
             {
                 "command": "/gaps",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "View stuck learners & hard modules",
                 "usage_hint": "Show learning gaps",
                 "should_escape": false
             },
             {
                 "command": "/courses",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Browse available courses",
                 "usage_hint": "List all courses",
                 "should_escape": false
             },
             {
                 "command": "/help",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Get help with LMS commands",
                 "usage_hint": "Show available commands",
                 "should_escape": false
             },
             {
                 "command": "/onboard",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Onboard new Employees",
                 "should_escape": false
             },
             {
                 "command": "/backup",
-                "url": "https://YOUR_APP_URL/slack/events",
+                "url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
                 "description": "Back up LMS data to Google Sheets",
                 "usage_hint": "Trigger manual backup",
                 "should_escape": false
@@ -119,7 +119,7 @@
     },
     "settings": {
         "event_subscriptions": {
-            "request_url": "https://YOUR_APP_URL/slack/events",
+            "request_url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor",
             "bot_events": [
                 "app_mention",
                 "message.im",
@@ -128,7 +128,7 @@
         },
         "interactivity": {
             "is_enabled": true,
-            "request_url": "https://YOUR_APP_URL/slack/events"
+            "request_url": "https://n8n-yvae.srv1371300.hstgr.cloud/webhook/supervisor"
         },
         "org_deploy_enabled": false,
         "socket_mode_enabled": false,
